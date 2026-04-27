@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        .stat-card {
+            border-radius: 15px;
+            border: none;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            overflow: hidden;
+            cursor: pointer;
+        }
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        .customer-card {
+            border-radius: 12px;
+            border: 1px solid #e9ecef;
+            transition: all 0.3s ease;
+            background: white;
+        }
+        .customer-card:hover {
+            border-color: #007bff;
+            box-shadow: 0 4px 15px rgba(0,123,255,0.1);
+            transform: translateY(-2px);
+        }
+        .quick-action-card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            text-align: center;
+            border: 1px solid #e9ecef;
+            transition: all 0.3s ease;
+            height: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+        .quick-action-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .quick-action-card:hover {
+            border-color: #007bff;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+        }
+        .action-icon {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 28px;
+            transition: transform 0.3s ease;
+        }
+        .quick-action-card:hover .action-icon {
+            transform: scale(1.1);
+        }
+        .icon-primary { background: linear-gradient(135deg, #007bff 0%, #0056b3 100%); color: white; }
+        .icon-warning { background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%); color: white; }
+        .icon-success { background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%); color: white; }
+        .icon-info { background: linear-gradient(135deg, #17a2b8 0%, #138496 100%); color: white; }
+        .icon-purple { background: linear-gradient(135deg, #6f42c1 0%, #5a2d9c 100%); color: white; }
+        .icon-orange { background: linear-gradient(135deg, #fd7e14 0%, #e55a00 100%); color: white; }
+        .icon-teal { background: linear-gradient(135deg, #20c997 0%, #1a9e7a 100%); color: white; }
+        .badge-pension {
+            background: linear-gradient(135deg, #e83e8c 0%, #d91a72 100%);
+            color: white;
+        }
+        .search-box {
+            max-width: 300px;
+        }
+        .customer-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 20px;
+            transition: transform 0.3s ease;
+        }
+        .customer-card:hover .customer-avatar {
+            transform: scale(1.05);
+        }
+        .loan-status-badge {
+            font-size: 0.75rem;
+            padding: 5px 10px;
+            border-radius: 20px;
+        }
+        .table-hover tbody tr:hover {
+            background: linear-gradient(135deg, #f8f9ff 0%, #e3f2fd 100%);
+        }
+        .welcome-banner {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+        .stat-icon {
+            font-size: 2.5rem;
+            opacity: 0.8;
+        }
+        .progress-bar {
+            border-radius: 10px;
+        }
+        .customer-actions .btn {
+            border-radius: 20px;
+            padding: 5px 15px;
+            font-size: 0.85rem;
+        }
+        .section-header {
+            border-bottom: 2px solid #e9ecef;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+        .recent-activity {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .activity-item {
+            border-left: 3px solid #007bff;
+            padding-left: 15px;
+            margin-bottom: 15px;
+        }
+        .activity-item.warning { border-left-color: #ffc107; }
+        .activity-item.success { border-left-color: #28a745; }
+        .activity-item.danger { border-left-color: #dc3545; }
+        .activity-item.info { border-left-color: #17a2b8; }
+        .empty-state {
+            padding: 3rem 1rem;
+            text-align: center;
+            color: #6c757d;
+        }
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+        .quick-actions-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            gap: 1rem;
+        }
+        .quick-action-card {
+            flex: 1;
+            min-width: 200px;
+            display: flex;
+            flex-direction: column;
+        }
+        .action-button-container {
+            margin-top: auto;
+        }
+        .action-button {
+            width: 100%;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+        .action-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .btn-purple {
+            background: #6f42c1;
+            border-color: #6f42c1;
+            color: white;
+        }
+        .btn-orange {
+            background: #fd7e14;
+            border-color: #fd7e14;
+            color: white;
+        }
+        .btn-teal {
+            background: #20c997;
+            border-color: #20c997;
+            color: white;
+        }
+        .withdrawal-stats {
+            background: linear-gradient(135deg, #20c997 0%, #1a9e7a 100%);
+            color: white;
+        }
+        .posting-stats {
+            background: linear-gradient(135deg, #fd7e14 0%, #e55a00 100%);
+            color: white;
+        }
+        .payment-stats {
+            background: linear-gradient(135deg, #6f42c1 0%, #5a2d9c 100%);
+            color: white;
+        }
+        .btn-outline-teal {
+            border-color: #20c997;
+            color: #20c997;
+        }
+        .btn-outline-teal:hover {
+            background: #20c997;
+            color: white;
+        }
+        .alert {
+            border-radius: 12px;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/dashboard">
+                <i class="bi bi-cash-coin me-2"></i>Millenium Cash
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link active" href="/dashboard">Dashboard</a>
+                <a class="nav-link" href="/loans">Loan Applications</a>
+                <a class="nav-link" href="/employee/register-customer">Register Customer</a>
+                <a class="nav-link" href="/employee/pension-withdrawals">Pension Withdrawals</a>
+                <a class="nav-link" href="/employee/collection-postings">Collection Postings</a>
+                <a class="nav-link" href="/employee/payments">Payment Posting</a>
+                <a class="nav-link" href="/employee/calculator">Loan Calculator</a>
+                <a class="nav-link" href="/profile">Profile</a>
+                <a class="nav-link" href="/logout">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container my-4">
+        <!-- Alert Messages -->
+        <% if (typeof error !== 'undefined' && error) { %>
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i><%= error %>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        <% } %>
+        
+        <% if (typeof success !== 'undefined' && success) { %>
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="bi bi-check-circle-fill me-2"></i><%= success %>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        <% } %>
+
+        <!-- Welcome Banner -->
+        <div class="welcome-banner">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h2 class="mb-2">Welcome back, <strong><%= user.full_name %></strong>! 👋</h2>
+                    <p class="mb-0 opacity-75">
+                        <i class="bi bi-calendar-check me-1"></i>
+                        Today is <%= new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) %>
+                    </p>
+                </div>
+                <div class="col-md-4 text-end">
+                    <div class="bg-white bg-opacity-10 p-3 rounded">
+                        <small class="d-block">Employee ID</small>
+                        <strong class="fs-5">EMP-<%= user.user_id.toString().padStart(4, '0') %></strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="row mb-4">
+            <!-- Customer Stats -->
+            <div class="col-xl-2 col-md-4 col-sm-6 mb-4">
+                <div class="card stat-card bg-primary text-white" onclick="window.location.href='/employee/customers'">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h4 class="mb-0"><%= stats.total_customers || 0 %></h4>
+                                <p class="mb-0 fw-light small">Total Customers</p>
+                            </div>
+                            <div class="stat-icon">
+                                <i class="bi bi-people-fill"></i>
+                            </div>
+                        </div>
+                        <div class="mt-2">
+                            <small class="opacity-75">
+                                <i class="bi bi-person-plus me-1"></i>
+                                Registered pensioners
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Loan Stats -->
+            <div class="col-xl-2 col-md-4 col-sm-6 mb-4">
+                <div class="card stat-card bg-warning text-dark" onclick="window.location.href='/loans?status=pending'">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h4 class="mb-0"><%= stats.pending_loans || 0 %></h4>
+                                <p class="mb-0 fw-light small">Pending Loans</p>
+                            </div>
+                            <div class="stat-icon">
+                                <i class="bi bi-clock-history"></i>
+                            </div>
+                        </div>
+                        <div class="mt-2">
+                            <small class="opacity-75">
+                                <i class="bi bi-exclamation-triangle me-1"></i>
+                                Awaiting review
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Processed Loans -->
+            <div class="col-xl-2 col-md-4 col-sm-6 mb-4">
+                <div class="card stat-card bg-success text-white" onclick="window.location.href='/loans'">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h4 class="mb-0"><%= stats.processed_loans || 0 %></h4>
+                                <p class="mb-0 fw-light small">Processed Loans</p>
+                            </div>
+                            <div class="stat-icon">
+                                <i class="bi bi-check-circle-fill"></i>
+                            </div>
+                        </div>
+                        <div class="mt-2">
+                            <small class="opacity-75">
+                                <i class="bi bi-graph-up-arrow me-1"></i>
+                                Approved/Disbursed
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Total Processed Amount -->
+            <div class="col-xl-2 col-md-4 col-sm-6 mb-4">
+                <div class="card stat-card bg-info text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h4 class="mb-0">₱<%= (stats.total_processed || 0).toLocaleString() %></h4>
+                                <p class="mb-0 fw-light small">Total Processed</p>
+                            </div>
+                            <div class="stat-icon">
+                                <i class="bi bi-cash-stack"></i>
+                            </div>
+                        </div>
+                        <div class="mt-2">
+                            <small class="opacity-75">
+                                <i class="bi bi-currency-exchange me-1"></i>
+                                Loan amount
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Withdrawal Stats -->
+            <div class="col-xl-2 col-md-4 col-sm-6 mb-4">
+                <div class="card stat-card withdrawal-stats" onclick="window.location.href='/employee/pension-withdrawals'">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h4 class="mb-0"><%= stats.total_withdrawals || 0 %></h4>
+                                <p class="mb-0 fw-light small">Withdrawals</p>
+                            </div>
+                            <div class="stat-icon">
+                                <i class="bi bi-cash-coin"></i>
+                            </div>
+                        </div>
+                        <div class="mt-2">
+                            <small class="opacity-75">
+                                <i class="bi bi-arrow-down-circle me-1"></i>
+                                Pension withdrawals
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payment Stats -->
+            <div class="col-xl-2 col-md-4 col-sm-6 mb-4">
+                <div class="card stat-card payment-stats" onclick="window.location.href='/employee/payments'">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h4 class="mb-0"><%= stats.total_payments || 0 %></h4>
+                                <p class="mb-0 fw-light small">Payments</p>
+                            </div>
+                            <div class="stat-icon">
+                                <i class="bi bi-credit-card"></i>
+                            </div>
+                        </div>
+                        <div class="mt-2">
+                            <small class="opacity-75">
+                                <i class="bi bi-cash-stack me-1"></i>
+                                Loan payments
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions & Recent Activity -->
+        <div class="row mb-4">
+            <!-- Quick Actions -->
+            <div class="col-lg-8 mb-4">
+                <div class="card h-100">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0"><i class="bi bi-lightning-fill me-2 text-warning"></i>Quick Actions</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="quick-actions-container">
+                            <!-- Register Customer Card -->
+                            <div class="quick-action-card">
+                                <div class="action-icon icon-primary">
+                                    <i class="bi bi-person-plus-fill"></i>
+                                </div>
+                                <h6 class="fw-bold">Register Customer</h6>
+                                <p class="text-muted small mb-3">Add new pensioner to system</p>
+                                <div class="action-button-container">
+                                    <a href="/employee/register-customer" class="btn btn-primary action-button">
+                                        Get Started <i class="bi bi-arrow-right ms-1"></i>
+                                    </a>
+                                </div>
+                            </div>
+                            
+                            <!-- Pension Withdrawal Card -->
+                            <div class="quick-action-card">
+                                <div class="action-icon icon-teal">
+                                    <i class="bi bi-cash-coin"></i>
+                                </div>
+                                <h6 class="fw-bold">Pension Withdrawal</h6>
+                                <p class="text-muted small mb-3">Process pension payments</p>
+                                <div class="action-button-container">
+                                    <a href="/employee/create-withdrawal" class="btn btn-teal action-button">
+                                        Withdraw <i class="bi bi-arrow-right ms-1"></i>
+                                    </a>
+                                </div>
+                            </div>
+
+                            <!-- Review Loans Card -->
+                            <div class="quick-action-card">
+                                <div class="action-icon icon-warning">
+                                    <i class="bi bi-clipboard-check-fill"></i>
+                                </div>
+                                <h6 class="fw-bold">Review Loans</h6>
+                                <p class="text-muted small mb-3">Process pending applications</p>
+                                <div class="action-button-container">
+                                    <a href="/loans?status=pending" class="btn btn-warning text-white action-button">
+                                        Review Now <i class="bi bi-arrow-right ms-1"></i>
+                                    </a>
+                                </div>
+                            </div>
+                            
+                            <!-- Payment Posting Card -->
+                            <div class="quick-action-card">
+                                <div class="action-icon icon-purple">
+                                    <i class="bi bi-credit-card"></i>
+                                </div>
+                                <h6 class="fw-bold">Post Payments</h6>
+                                <p class="text-muted small mb-3">Record loan payments</p>
+                                <div class="action-button-container">
+                                    <a href="/employee/post-payment" class="btn btn-purple action-button">
+                                        Post Now <i class="bi bi-arrow-right ms-1"></i>
+                                    </a>
+                                </div>
+                            </div>
+
+                            <!-- Collection Posting Card -->
+                            <div class="quick-action-card">
+                                <div class="action-icon icon-orange">
+                                    <i class="bi bi-journal-bookmark-fill"></i>
+                                </div>
+                                <h6 class="fw-bold">Collection Posting</h6>
+                                <p class="text-muted small mb-3">Post collections to bank/fund</p>
+                                <div class="action-button-container">
+                                    <a href="/employee/collection-postings" class="btn btn-orange action-button">
+                                        View Postings <i class="bi bi-arrow-right ms-1"></i>
+                                    </a>
+                                </div>
+                            </div>
+
+                            <!-- Loan Calculator Card -->
+                            <div class="quick-action-card">
+                                <div class="action-icon icon-info">
+                                    <i class="bi bi-calculator-fill"></i>
+                                </div>
+                                <h6 class="fw-bold">Loan Calculator</h6>
+                                <p class="text-muted small mb-3">Calculate payments & contract</p>
+                                <div class="action-button-container">
+                                    <a href="/employee/calculator" class="btn btn-info action-button">
+                                        Calculate <i class="bi bi-arrow-right ms-1"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Activity -->
+            <div class="col-lg-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0"><i class="bi bi-activity me-2 text-primary"></i>Recent Activity</h5>
+                    </div>
+                    <div class="card-body recent-activity">
+                        <% if (recentActivities && recentActivities.length > 0) { %>
+                            <% recentActivities.slice(0, 8).forEach(function(activity) { %>
+                                <% 
+                                    let statusClass = 'primary';
+                                    let icon = 'bi-activity';
+                                    
+                                    if (activity.action) {
+                                        if (activity.action.includes('WITHDRAWAL')) {
+                                            icon = 'bi-cash-coin';
+                                            statusClass = 'success';
+                                        } else if (activity.action.includes('POSTING') || activity.action.includes('PAYMENT')) {
+                                            icon = 'bi-credit-card';
+                                            statusClass = 'info';
+                                        } else if (activity.action.includes('LOGIN')) {
+                                            icon = 'bi-box-arrow-in-right';
+                                            statusClass = 'warning';
+                                        } else if (activity.action.includes('CREATE_LOAN')) {
+                                            icon = 'bi-plus-circle';
+                                            statusClass = 'primary';
+                                        } else if (activity.action.includes('CREATE_CUSTOMER')) {
+                                            icon = 'bi-person-plus';
+                                            statusClass = 'success';
+                                        } else if (activity.action.includes('UPDATE_LOAN')) {
+                                            icon = 'bi-pencil-square';
+                                            statusClass = 'warning';
+                                        } else {
+                                            icon = 'bi-activity';
+                                            statusClass = 'primary';
+                                        }
+                                    }
+                                %>
+                                <div class="activity-item <%= statusClass %>">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <h6 class="mb-1">
+                                                <i class="bi <%= icon %> me-1"></i>
+                                                <%= activity.action ? activity.action.replace(/_/g, ' ') : 'Activity' %>
+                                            </h6>
+                                            <p class="mb-1 small text-muted">
+                                                <%= activity.description || 'No description' %> 
+                                            </p>
+                                            <small class="text-muted">
+                                                <i class="bi bi-clock me-1"></i>
+                                                <%= new Date(activity.created_at).toLocaleString() %>
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                            <% }); %>
+                        <% } else { %>
+                            <div class="empty-state">
+                                <i class="bi bi-inbox"></i>
+                                <p class="mb-0">No recent activity</p>
+                                <small class="text-muted">Your activities will appear here</small>
+                            </div>
+                        <% } %>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Customer Management Section -->
+        <div class="card">
+            <div class="card-header bg-white">
+                <div class="row align-items-center">
+                    <div class="col-md-6">
+                        <h5 class="mb-0"><i class="bi bi-people-fill me-2 text-primary"></i>All Customers</h5>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex gap-2 justify-content-end">
+                            <div class="search-box">
+                                <div class="input-group">
+                                    <span class="input-group-text bg-white border-end-0">
+                                        <i class="bi bi-search text-muted"></i>
+                                    </span>
+                                    <input type="text" class="form-control border-start-0" id="customerSearch" placeholder="Search customers...">
+                                </div>
+                            </div>
+                            <div class="dropdown">
+                                <button class="btn btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                    <i class="bi bi-funnel me-1"></i>Filter
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="#" onclick="filterCustomers('all')">All Customers</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" href="#" onclick="filterCustomers('active')">With Active Loans</a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="filterCustomers('pending')">With Pending Loans</a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="filterCustomers('no-loans')">No Loans</a></li>
+                                </ul>
+                            </div>
+                            <a href="/employee/register-customer" class="btn btn-primary">
+                                <i class="bi bi-person-plus me-1"></i>New Customer
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <% if (customers && customers.length > 0) { %>
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="customersTable">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Customer</th>
+                                    <th>Pension Details</th>
+                                    <th>Contact Info</th>
+                                    <th>Loan Status</th>
+                                    <th>Last Activity</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% customers.forEach(function(customer) { 
+                                    const customerLoans = loans ? loans.filter(function(loan) { return loan.borrower_id === customer.customer_id; }) : [];
+                                    const activeLoans = customerLoans.filter(function(loan) { return loan.status === 'approved' || loan.status === 'disbursed'; });
+                                    const pendingLoans = customerLoans.filter(function(loan) { return loan.status === 'pending'; });
+                                    const fullName = (customer.first_name || '') + ' ' + (customer.last_name || '');
+                                    const displayName = fullName.trim() || 'Unknown';
+                                    const initials = ((customer.first_name ? customer.first_name[0] : '') + (customer.last_name ? customer.last_name[0] : '')).toUpperCase() || '?';
+                                %>
+                                <tr class="customer-row">
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="customer-avatar me-3">
+                                                <%= initials %>
+                                            </div>
+                                            <div>
+                                                <div class="fw-bold"><%= displayName %></div>
+                                                <small class="text-muted">
+                                                    <i class="bi bi-person-badge me-1"></i>
+                                                    <%= customer.pension_number || 'N/A' %>
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="small">
+                                            <div><strong><%= customer.pension_system || 'N/A' %></strong></div>
+                                            <div>₱<%= (customer.monthly_pension || 0).toLocaleString() %>/month</div>
+                                            <span class="badge badge-pension">
+                                                <i class="bi bi-cash-coin me-1"></i>Pensioner
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="small">
+                                            <div><i class="bi bi-telephone me-1"></i><%= customer.mobile_number || 'N/A' %></div>
+                                            <div><i class="bi bi-envelope me-1"></i><%= customer.email || 'N/A' %></div>
+                                            <div class="text-truncate" style="max-width: 200px;">
+                                                <i class="bi bi-geo-alt me-1"></i><%= customer.city || 'Address not set' %>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <% if (activeLoans.length > 0) { %>
+                                            <span class="badge bg-success loan-status-badge">
+                                                <i class="bi bi-check-circle me-1"></i>
+                                                <%= activeLoans.length %> Active
+                                            </span>
+                                        <% } %>
+                                        <% if (pendingLoans.length > 0) { %>
+                                            <span class="badge bg-warning loan-status-badge">
+                                                <i class="bi bi-clock me-1"></i>
+                                                <%= pendingLoans.length %> Pending
+                                            </span>
+                                        <% } %>
+                                        <% if (customerLoans.length === 0) { %>
+                                            <span class="badge bg-secondary loan-status-badge">
+                                                <i class="bi bi-dash-circle me-1"></i>
+                                                No Loans
+                                            </span>
+                                        <% } %>
+                                    </td>
+                                    <td>
+                                        <div class="small">
+                                            <% if (customerLoans.length > 0) { %>
+                                                <% 
+                                                    const latestLoan = customerLoans.sort(function(a, b) { 
+                                                        return new Date(b.applied_date) - new Date(a.applied_date); 
+                                                    })[0]; 
+                                                %>
+                                                <div class="fw-bold"><%= new Date(latestLoan.applied_date).toLocaleDateString() %></div>
+                                                <small class="text-muted text-capitalize"><%= latestLoan.status %></small>
+                                            <% } else { %>
+                                                <span class="text-muted">No activity</span>
+                                            <% } %>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="customer-actions">
+                                            <div class="btn-group btn-group-sm">
+                                                <a href="/employee/customer/<%= customer.customer_id %>" 
+                                                   class="btn btn-outline-primary"
+                                                   data-bs-toggle="tooltip" title="View Profile">
+                                                    <i class="bi bi-eye"></i>
+                                                </a>
+                                                <a href="/employee/customer/<%= customer.customer_id %>/create-loan" 
+                                                   class="btn btn-outline-success"
+                                                   data-bs-toggle="tooltip" title="Create Loan">
+                                                    <i class="bi bi-plus-circle"></i>
+                                                </a>
+                                                <!-- Withdrawal Action -->
+                                                <a href="/employee/create-withdrawal?customer_id=<%= customer.customer_id %>" 
+                                                   class="btn btn-outline-teal"
+                                                   data-bs-toggle="tooltip" title="Create Withdrawal">
+                                                    <i class="bi bi-cash-coin"></i>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <% }); %>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Showing count -->
+                    <div class="d-flex justify-content-between align-items-center mt-4">
+                        <div class="text-muted small">
+                            Showing <strong id="visibleCount"><%= customers.length %></strong> of <strong><%= customers.length %></strong> customers
+                        </div>
+                    </div>
+                <% } else { %>
+                    <div class="empty-state">
+                        <i class="bi bi-people"></i>
+                        <h4 class="text-muted">No Customers Found</h4>
+                        <p class="text-muted mb-4">There are no customers registered in the system yet.</p>
+                        <a href="/employee/register-customer" class="btn btn-primary btn-lg">
+                            <i class="bi bi-person-plus me-2"></i>Register First Customer
+                        </a>
+                    </div>
+                <% } %>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Customer search functionality
+        const searchInput = document.getElementById('customerSearch');
+        if (searchInput) {
+            searchInput.addEventListener('input', function(e) {
+                const searchTerm = e.target.value.toLowerCase();
+                const rows = document.querySelectorAll('.customer-row');
+                let visibleCount = 0;
+                
+                rows.forEach(function(row) {
+                    const text = row.textContent.toLowerCase();
+                    if (text.includes(searchTerm)) {
+                        row.style.display = '';
+                        visibleCount++;
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+                
+                // Update showing count
+                const countElement = document.getElementById('visibleCount');
+                if (countElement) {
+                    countElement.innerHTML = visibleCount;
+                }
+            });
+        }
+
+        // Filter customers
+        function filterCustomers(filter) {
+            const rows = document.querySelectorAll('.customer-row');
+            let visibleCount = 0;
+            
+            rows.forEach(function(row) {
+                const statusBadges = row.querySelectorAll('.loan-status-badge');
+                let showRow = true;
+                
+                switch(filter) {
+                    case 'active':
+                        showRow = Array.from(statusBadges).some(function(badge) { 
+                            return badge.textContent.includes('Active');
+                        });
+                        break;
+                    case 'pending':
+                        showRow = Array.from(statusBadges).some(function(badge) { 
+                            return badge.textContent.includes('Pending');
+                        });
+                        break;
+                    case 'no-loans':
+                        showRow = Array.from(statusBadges).some(function(badge) { 
+                            return badge.textContent.includes('No Loans');
+                        });
+                        break;
+                    default:
+                        showRow = true;
+                }
+                
+                if (showRow) {
+                    row.style.display = '';
+                    visibleCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+            
+            // Update showing count
+            const countElement = document.getElementById('visibleCount');
+            if (countElement) {
+                countElement.innerHTML = visibleCount;
+            }
+            
+            // Clear search input when filtering
+            if (searchInput) {
+                searchInput.value = '';
+            }
+        }
+
+        // Initialize tooltips
+        document.addEventListener('DOMContentLoaded', function() {
+            const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+        });
+
+        // Auto-dismiss alerts after 5 seconds
+        setTimeout(function() {
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(function(alert) {
+                const bsAlert = new bootstrap.Alert(alert);
+                bsAlert.close();
+            });
+        }, 5000);
+    </script>
+</body>
+</html>

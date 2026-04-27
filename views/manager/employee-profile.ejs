@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %> - Millenium Cash</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .page-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 25px;
+        }
+        .stat-card {
+            border-radius: 12px;
+            border: none;
+            transition: transform 0.3s ease;
+        }
+        .stat-card:hover {
+            transform: translateY(-3px);
+        }
+        .profile-header {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 15px;
+            padding: 25px;
+        }
+        .performance-card {
+            border-left: 4px solid #007bff;
+            border-radius: 10px;
+        }
+        .performance-card.success { border-left-color: #28a745; }
+        .performance-card.warning { border-left-color: #ffc107; }
+        .performance-card.danger { border-left-color: #dc3545; }
+        .activity-item {
+            border-left: 3px solid #007bff;
+            padding-left: 15px;
+            margin-bottom: 15px;
+        }
+        .activity-item.success { border-left-color: #28a745; }
+        .activity-item.warning { border-left-color: #ffc107; }
+        .badge-performance {
+            font-size: 0.7rem;
+            padding: 4px 8px;
+        }
+        .chart-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
+        .empty-state {
+            padding: 3rem 1rem;
+            text-align: center;
+            color: #6c757d;
+        }
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/dashboard">
+                <i class="bi bi-cash-coin me-2"></i>Millenium Cash
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="/dashboard">Dashboard</a>
+                <a class="nav-link" href="/loans">Loan Applications</a>
+                <a class="nav-link" href="/employee/pension-withdrawals">Pension Withdrawals</a>
+                <a class="nav-link" href="/employee/collection-postings">Collection Postings</a>
+                <a class="nav-link" href="/manager/team">Team Management</a>
+                <a class="nav-link" href="/manager/reports">Reports</a>
+                <a class="nav-link" href="/manager/analytics">Analytics</a>
+                <a class="nav-link" href="/profile">Profile</a>
+                <a class="nav-link" href="/logout">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container my-4">
+        <!-- Page Header -->
+        <div class="page-header mb-4">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h1 class="mb-2"><i class="bi bi-person-badge me-2"></i>Employee Performance</h1>
+                    <p class="mb-0 opacity-75">Detailed performance analysis for <%= employee.full_name %></p>
+                </div>
+                <div class="col-md-4 text-end">
+                    <a href="/manager/team" class="btn btn-light btn-lg">
+                        <i class="bi bi-arrow-left me-2"></i>Back to Team
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Employee Profile Header -->
+        <div class="profile-header mb-4">
+            <div class="row align-items-center">
+                <div class="col-md-2 text-center">
+                    <div class="bg-primary rounded-circle d-inline-flex align-items-center justify-content-center" 
+                         style="width: 80px; height: 80px;">
+                        <span class="text-white fw-bold fs-4">
+                            <%= employee.full_name.split(' ').map(n => n[0]).join('').toUpperCase() %>
+                        </span>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <h3 class="mb-1"><%= employee.full_name %></h3>
+                    <p class="mb-1 text-muted">
+                        <i class="bi bi-envelope me-1"></i><%= employee.email %>
+                    </p>
+                    <p class="mb-0 text-muted">
+                        <i class="bi bi-calendar me-1"></i>
+                        Joined <%= new Date(employee.created_at).toLocaleDateString() %>
+                    </p>
+                </div>
+                <div class="col-md-4 text-end">
+                    <div class="d-flex justify-content-end gap-2">
+                        <span class="badge bg-<%= employee.is_active ? 'success' : 'secondary' %> fs-6">
+                            <i class="bi bi-<%= employee.is_active ? 'check-circle' : 'x-circle' %> me-1"></i>
+                            <%= employee.is_active ? 'Active' : 'Inactive' %>
+                        </span>
+                        <span class="badge bg-info fs-6">
+                            <i class="bi bi-person-gear me-1"></i>
+                            <%= employee.user_type.toUpperCase() %>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Performance Statistics -->
+        <div class="row mb-4">
+            <div class="col-xl-3 col-md-6 mb-3">
+                <div class="card stat-card bg-primary text-white">
+                    <div class="card-body text-center">
+                        <h2 class="mb-0"><%= stats.totalLoans || 0 %></h2>
+                        <p class="mb-0">Total Loans Processed</p>
+                        <small class="opacity-75">All time</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-md-6 mb-3">
+                <div class="card stat-card bg-success text-white">
+                    <div class="card-body text-center">
+                        <h2 class="mb-0"><%= stats.approvedLoans || 0 %></h2>
+                        <p class="mb-0">Approved Loans</p>
+                        <small class="opacity-75">Success rate: <%= stats.totalLoans > 0 ? Math.round((stats.approvedLoans / stats.totalLoans) * 100) : 0 %>%</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-md-6 mb-3">
+                <div class="card stat-card bg-warning text-dark">
+                    <div class="card-body text-center">
+                        <h2 class="mb-0"><%= stats.pendingLoans || 0 %></h2>
+                        <p class="mb-0">Pending Loans</p>
+                        <small class="opacity-75">Awaiting review</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-md-6 mb-3">
+                <div class="card stat-card bg-info text-white">
+                    <div class="card-body text-center">
+                        <h2 class="mb-0">₱<%= (stats.totalLoanAmount || 0).toLocaleString() %></h2>
+                        <p class="mb-0">Total Loan Amount</p>
+                        <small class="opacity-75">Processed</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Performance Charts and Details -->
+        <div class="row">
+            <!-- Left Column: Performance Metrics -->
+            <div class="col-lg-8 mb-4">
+                <!-- Monthly Performance Chart -->
+                <div class="card mb-4">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0"><i class="bi bi-bar-chart me-2"></i>Monthly Performance</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="performanceChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Loan Activity -->
+                <div class="card">
+                    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="bi bi-clock-history me-2"></i>Recent Loan Activity</h5>
+                        <span class="badge bg-primary"><%= recentLoans ? recentLoans.length : 0 %></span>
+                    </div>
+                    <div class="card-body">
+                        <% if (recentLoans && recentLoans.length > 0) { %>
+                            <div style="max-height: 400px; overflow-y: auto;">
+                                <% recentLoans.forEach(function(loan) { %>
+                                <div class="activity-item <%= loan.status === 'approved' ? 'success' : loan.status === 'pending' ? 'warning' : 'primary' %>">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div class="flex-grow-1">
+                                            <h6 class="mb-1">
+                                                <i class="bi bi-<%= 
+                                                    loan.status === 'approved' ? 'check-circle' : 
+                                                    loan.status === 'pending' ? 'clock' : 'x-circle'
+                                                %> me-1"></i>
+                                                Loan #<%= loan.loan_id %> - <%= loan.status.toUpperCase() %>
+                                            </h6>
+                                            <p class="mb-1 small text-muted">
+                                                <strong>₱<%= parseFloat(loan.loan_amount || 0).toLocaleString() %></strong> 
+                                                for <%= loan.purpose %> 
+                                                (<%= loan.loan_type %>)
+                                            </p>
+                                            <small class="text-muted">
+                                                <i class="bi bi-calendar me-1"></i>
+                                                <%= new Date(loan.applied_date).toLocaleDateString() %>
+                                            </small>
+                                        </div>
+                                        <div class="text-end">
+                                            <span class="badge bg-<%= 
+                                                loan.status === 'approved' ? 'success' : 
+                                                loan.status === 'pending' ? 'warning' : 'secondary'
+                                            %> badge-performance">
+                                                <%= loan.status.toUpperCase() %>
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <% }); %>
+                            </div>
+                        <% } else { %>
+                            <div class="empty-state">
+                                <i class="bi bi-inbox"></i>
+                                <p class="mb-0">No recent loan activity</p>
+                                <small class="text-muted">Loan activities will appear here</small>
+                            </div>
+                        <% } %>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Performance Summary -->
+            <div class="col-lg-4 mb-4">
+                <!-- Performance Rating -->
+                <div class="card mb-4">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0"><i class="bi bi-speedometer2 me-2"></i>Performance Summary</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <small class="text-muted d-block">Approval Rate</small>
+                            <div class="d-flex align-items-center">
+                                <div class="flex-grow-1 me-3">
+                                    <div class="progress" style="height: 8px;">
+                                        <div class="progress-bar bg-success" 
+                                             style="width: <%= stats.totalLoans > 0 ? Math.round((stats.approvedLoans / stats.totalLoans) * 100) : 0 %>%">
+                                        </div>
+                                    </div>
+                                </div>
+                                <span class="fw-bold text-success">
+                                    <%= stats.totalLoans > 0 ? Math.round((stats.approvedLoans / stats.totalLoans) * 100) : 0 %>%
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <small class="text-muted d-block">Efficiency Score</small>
+                            <h4 class="text-primary">
+                                <% 
+                                    const efficiency = stats.totalLoans > 0 ? 
+                                        Math.round((stats.approvedLoans / stats.totalLoans) * 100) : 0;
+                                    let efficiencyLevel = 'success';
+                                    let efficiencyIcon = 'star-fill';
+                                    if (efficiency < 60) {
+                                        efficiencyLevel = 'danger';
+                                        efficiencyIcon = 'star';
+                                    } else if (efficiency < 80) {
+                                        efficiencyLevel = 'warning';
+                                        efficiencyIcon = 'star-half';
+                                    }
+                                %>
+                                <span class="badge bg-<%= efficiencyLevel %> fs-6">
+                                    <i class="bi bi-<%= efficiencyIcon %> me-1"></i>
+                                    <%= efficiency %>%
+                                </span>
+                            </h4>
+                        </div>
+
+                        <div class="mb-3">
+                            <small class="text-muted d-block">Average Processing Time</small>
+                            <h5 class="text-info">2.3 days</h5>
+                        </div>
+
+                        <div class="mb-3">
+                            <small class="text-muted d-block">Customer Satisfaction</small>
+                            <h5 class="text-warning">
+                                <i class="bi bi-star-fill"></i>
+                                <i class="bi bi-star-fill"></i>
+                                <i class="bi bi-star-fill"></i>
+                                <i class="bi bi-star-fill"></i>
+                                <i class="bi bi-star-half"></i>
+                                <span class="text-muted small">(4.5/5)</span>
+                            </h5>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="card">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0"><i class="bi bi-lightning me-2"></i>Quick Actions</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <a href="/loans?created_by=<%= employee.user_id %>" class="btn btn-outline-primary btn-sm">
+                                <i class="bi bi-eye me-1"></i>View All Loans
+                            </a>
+                            <a href="mailto:<%= employee.email %>" class="btn btn-outline-success btn-sm">
+                                <i class="bi bi-envelope me-1"></i>Send Email
+                            </a>
+                            <button class="btn btn-outline-info btn-sm" onclick="generatePerformanceReport()">
+                                <i class="bi bi-download me-1"></i>Export Report
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Initialize Performance Chart
+        document.addEventListener('DOMContentLoaded', function() {
+            const ctx = document.getElementById('performanceChart').getContext('2d');
+            
+            // Sample data - you would replace this with actual data from your backend
+            const performanceChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                    datasets: [{
+                        label: 'Loans Processed',
+                        data: [12, 19, 15, 25, 22, 30, 28, 35, 32, 40, 38, 45],
+                        backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1
+                    }, {
+                        label: 'Loans Approved',
+                        data: [10, 16, 12, 20, 18, 25, 24, 30, 28, 35, 32, 40],
+                        backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Number of Loans'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Months'
+                            }
+                        }
+                    },
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Monthly Loan Processing Performance'
+                        },
+                        legend: {
+                            position: 'top',
+                        }
+                    }
+                }
+            });
+        });
+
+        function generatePerformanceReport() {
+            // Simulate report generation
+            alert('Performance report for <%= employee.full_name %> is being generated...');
+            // In a real implementation, this would make an API call to generate a PDF/Excel report
+        }
+
+        // Auto-refresh every 5 minutes
+        setInterval(function() {
+            if (!document.querySelector('.modal.show')) {
+                window.location.reload();
+            }
+        }, 300000);
+    </script>
+</body>
+</html>

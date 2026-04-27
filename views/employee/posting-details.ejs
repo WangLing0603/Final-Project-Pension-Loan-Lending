@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %> - Millenium Cash</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        .details-card {
+            border-radius: 15px;
+            border: none;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.08);
+        }
+        .details-header {
+            background: linear-gradient(135deg, #fd7e14 0%, #e55a00 100%);
+            color: white;
+            border-radius: 15px 15px 0 0;
+            padding: 20px;
+        }
+        .info-section {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        .info-label {
+            font-size: 12px;
+            text-transform: uppercase;
+            color: #6c757d;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+        .info-value {
+            font-size: 16px;
+            font-weight: 500;
+            margin-top: 5px;
+        }
+        .status-badge {
+            padding: 8px 16px;
+            border-radius: 30px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        .action-buttons {
+            position: sticky;
+            bottom: 20px;
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+        }
+        .print-receipt {
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .print-receipt:hover {
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/dashboard">
+                <i class="bi bi-cash-coin me-2"></i>Millenium Cash
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="/dashboard">Dashboard</a>
+                <a class="nav-link" href="/employee/collection-postings">Collection Postings</a>
+                <a class="nav-link" href="/logout">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container my-4">
+        <!-- Back Button -->
+        <div class="mb-3">
+            <a href="/employee/collection-postings" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-2"></i>Back to Postings
+            </a>
+        </div>
+
+        <!-- Main Card -->
+        <div class="card details-card">
+            <div class="details-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3 class="mb-1">
+                            <i class="bi bi-journal-check me-2"></i>
+                            Posting Details
+                        </h3>
+                        <p class="mb-0 opacity-75">Reference: <%= posting.posting_reference %></p>
+                    </div>
+                    <div>
+                        <span class="status-badge bg-<%= posting.status === 'completed' ? 'success' : 'warning' %> text-white">
+                            <i class="bi bi-<%= posting.status === 'completed' ? 'check-circle' : 'clock-history' %> me-1"></i>
+                            <%= posting.status ? posting.status.toUpperCase() : 'COMPLETED' %>
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-body p-4">
+                <div class="row">
+                    <!-- Left Column -->
+                    <div class="col-md-6">
+                        <!-- Posting Information -->
+                        <div class="info-section">
+                            <h6 class="mb-3 text-primary">
+                                <i class="bi bi-info-circle me-2"></i>Posting Information
+                            </h6>
+                            <div class="row">
+                                <div class="col-6 mb-3">
+                                    <div class="info-label">Posting ID</div>
+                                    <div class="info-value">#<%= posting.posting_id %></div>
+                                </div>
+                                <div class="col-6 mb-3">
+                                    <div class="info-label">Posting Reference</div>
+                                    <div class="info-value"><code><%= posting.posting_reference || 'N/A' %></code></div>
+                                </div>
+                                <div class="col-6 mb-3">
+                                    <div class="info-label">Posting Type</div>
+                                    <div class="info-value">
+                                        <span class="badge bg-<%= posting.posting_type === 'bank_deposit' ? 'info' : 'success' %>">
+                                            <i class="bi bi-<%= posting.posting_type === 'bank_deposit' ? 'bank' : 'cash-coin' %> me-1"></i>
+                                            <%= posting.posting_type === 'bank_deposit' ? 'BANK DEPOSIT' : 'CHANGE FUND' %>
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="col-6 mb-3">
+                                    <div class="info-label">Amount Posted</div>
+                                    <div class="info-value text-success fw-bold">₱<%= parseFloat(posting.amount).toLocaleString() %></div>
+                                </div>
+                                <div class="col-6 mb-3">
+                                    <div class="info-label">Posting Date</div>
+                                    <div class="info-value">
+                                        <%= posting.created_at ? new Date(posting.created_at).toLocaleDateString() : 'N/A' %>
+                                        <br>
+                                        <small class="text-muted">
+                                            <%= posting.created_at ? new Date(posting.created_at).toLocaleTimeString() : '' %>
+                                        </small>
+                                    </div>
+                                </div>
+                                <div class="col-6 mb-3">
+                                    <div class="info-label">Posted By</div>
+                                    <div class="info-value">
+                                        <i class="bi bi-person-circle me-1"></i>
+                                        <%= posting.posted_by_name || 'System' %>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Bank Details (if bank deposit) -->
+                        <% if (posting.posting_type === 'bank_deposit') { %>
+                        <div class="info-section">
+                            <h6 class="mb-3 text-info">
+                                <i class="bi bi-bank me-2"></i>Bank Deposit Details
+                            </h6>
+                            <div class="row">
+                                <div class="col-12 mb-3">
+                                    <div class="info-label">Bank Name</div>
+                                    <div class="info-value"><%= posting.bank_name || 'N/A' %></div>
+                                </div>
+                                <div class="col-12 mb-3">
+                                    <div class="info-label">Account Number</div>
+                                    <div class="info-value"><%= posting.account_number || 'N/A' %></div>
+                                </div>
+                                <div class="col-12 mb-3">
+                                    <div class="info-label">Reference Number</div>
+                                    <div class="info-value"><code><%= posting.reference_number || 'N/A' %></code></div>
+                                </div>
+                            </div>
+                        </div>
+                        <% } %>
+
+                        <!-- Change Fund Details -->
+                        <% if (posting.posting_type === 'change_fund') { %>
+                        <div class="info-section">
+                            <h6 class="mb-3 text-success">
+                                <i class="bi bi-cash-coin me-2"></i>Change Fund Details
+                            </h6>
+                            <div class="row">
+                                <div class="col-12 mb-3">
+                                    <div class="info-label">Fund Type</div>
+                                    <div class="info-value">Petty Cash / Change Fund</div>
+                                </div>
+                                <div class="col-12 mb-3">
+                                    <div class="info-label">Notes</div>
+                                    <div class="info-value"><%= posting.notes || 'No additional notes' %></div>
+                                </div>
+                            </div>
+                        </div>
+                        <% } %>
+                    </div>
+
+                    <!-- Right Column -->
+                    <div class="col-md-6">
+                        <!-- Customer Information -->
+                        <div class="info-section">
+                            <h6 class="mb-3 text-primary">
+                                <i class="bi bi-person me-2"></i>Customer Information
+                            </h6>
+                            <div class="row">
+                                <div class="col-12 mb-3">
+                                    <div class="info-label">Customer Name</div>
+                                    <div class="info-value fw-bold">
+                                        <%= posting.first_name || '' %> <%= posting.last_name || '' %>
+                                    </div>
+                                </div>
+                                <div class="col-12 mb-3">
+                                    <div class="info-label">Pension Number</div>
+                                    <div class="info-value"><%= posting.pension_number || 'N/A' %></div>
+                                </div>
+                                <div class="col-12 mb-3">
+                                    <div class="info-label">Withdrawal Amount</div>
+                                    <div class="info-value text-warning fw-bold">
+                                        ₱<%= parseFloat(posting.withdrawal_amount || 0).toLocaleString() %>
+                                    </div>
+                                </div>
+                                <div class="col-12 mb-3">
+                                    <div class="info-label">Withdrawal Reference</div>
+                                    <div class="info-value"><code><%= posting.withdrawal_ref || 'N/A' %></code></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Audit Trail -->
+                        <div class="info-section">
+                            <h6 class="mb-3 text-secondary">
+                                <i class="bi bi-clock-history me-2"></i>Audit Trail
+                            </h6>
+                            <div class="row">
+                                <div class="col-12 mb-3">
+                                    <div class="info-label">Created At</div>
+                                    <div class="info-value">
+                                        <%= posting.created_at ? new Date(posting.created_at).toLocaleString() : 'N/A' %>
+                                    </div>
+                                </div>
+                                <div class="col-12 mb-3">
+                                    <div class="info-label">Last Updated</div>
+                                    <div class="info-value">
+                                        <%= posting.updated_at ? new Date(posting.updated_at).toLocaleString() : 'N/A' %>
+                                    </div>
+                                </div>
+                                <% if (posting.cancelled_date) { %>
+                                <div class="col-12 mb-3">
+                                    <div class="info-label">Cancelled Date</div>
+                                    <div class="info-value text-danger">
+                                        <%= new Date(posting.cancelled_date).toLocaleString() %>
+                                    </div>
+                                </div>
+                                <div class="col-12 mb-3">
+                                    <div class="info-label">Cancellation Reason</div>
+                                    <div class="info-value text-danger"><%= posting.cancellation_reason || 'N/A' %></div>
+                                </div>
+                                <% } %>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Notes Section -->
+                <% if (posting.notes) { %>
+                <div class="info-section">
+                    <h6 class="mb-3 text-secondary">
+                        <i class="bi bi-chat-text me-2"></i>Additional Notes
+                    </h6>
+                    <p class="mb-0"><%= posting.notes %></p>
+                </div>
+                <% } %>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="action-buttons">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <button onclick="window.print()" class="btn btn-primary print-receipt">
+                            <i class="bi bi-printer me-2"></i>Print This Page
+                        </button>
+                        <a href="/employee/posting/<%= posting.posting_id %>/receipt" 
+                           class="btn btn-info text-white ms-2"
+                           target="_blank">
+                            <i class="bi bi-receipt me-2"></i>View Receipt
+                        </a>
+                    </div>
+                    <div>
+                        <a href="/employee/collection-postings" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left me-2"></i>Back to List
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <style media="print">
+        .navbar, .action-buttons, .btn-outline-secondary, .btn-outline-secondary, .back-button, .btn {
+            display: none !important;
+        }
+        .details-card {
+            box-shadow: none !important;
+        }
+        body {
+            background: white !important;
+            padding: 0 !important;
+            margin: 0 !important;
+        }
+        .container {
+            max-width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+    </style>
+</body>
+</html>

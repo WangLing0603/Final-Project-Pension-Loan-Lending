@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        .calculator-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+        .contract-section {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .result-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        .printable-contract {
+            border: 2px solid #333;
+            padding: 40px;
+            background: white;
+            color: #333;
+            font-family: 'Times New Roman', Times, serif;
+        }
+        .contract-header {
+            text-align: center;
+            border-bottom: 2px solid #333;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        .contract-section {
+            margin-bottom: 25px;
+        }
+        .signature-line {
+            border-top: 1px solid #333;
+            margin-top: 50px;
+            padding-top: 10px;
+        }
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+            .printable-contract {
+                border: none;
+                box-shadow: none;
+                padding: 0;
+            }
+            body {
+                background: white !important;
+                color: black !important;
+            }
+        }
+        .form-range::-webkit-slider-thumb {
+            background: #6f42c1;
+        }
+        .form-range::-moz-range-thumb {
+            background: #6f42c1;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/dashboard">
+                <i class="bi bi-cash-coin me-2"></i>Pension Loan System
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="/dashboard">Dashboard</a>
+                <a class="nav-link" href="/loans">Loan Applications</a>
+                <a class="nav-link" href="/employee/register-customer">Register Customer</a>
+                <a class="nav-link active" href="/employee/calculator">Loan Calculator</a>
+                <a class="nav-link" href="/profile">Profile</a>
+                <a class="nav-link" href="/logout">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container my-4">
+        <!-- Back Button -->
+        <div class="mb-4 no-print">
+            <a href="/dashboard" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-2"></i>Back to Dashboard
+            </a>
+        </div>
+
+        <!-- Header -->
+        <div class="row mb-4 no-print">
+            <div class="col-12">
+                <h1><i class="bi bi-calculator-fill me-2 text-purple"></i>Loan Calculator & Contract Generator</h1>
+                <p class="text-muted">Calculate loan payments and generate printable contracts for your customers</p>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Calculator Section -->
+            <div class="col-lg-6 mb-4 no-print">
+                <div class="calculator-section">
+                    <h3 class="mb-4"><i class="bi bi-calculator me-2"></i>Loan Calculator</h3>
+                    
+                    <!-- Loan Type -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Loan Type</label>
+                        <select class="form-select" id="loanType" onchange="updateInterestRate()">
+                            <option value="regular" data-rate="8">Regular Pension Loan (8%)</option>
+                            <option value="emergency" data-rate="6">Emergency Loan (6%)</option>
+                            <option value="educational" data-rate="7">Educational Assistance (7%)</option>
+                            <option value="housing" data-rate="6">Housing Loan (6%)</option>
+                            <option value="livelihood" data-rate="9">Livelihood/Business (9%)</option>
+                        </select>
+                    </div>
+
+                    <!-- Loan Amount -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Loan Amount: ₱<span id="amountValue">50,000</span></label>
+                        <input type="range" class="form-range" id="loanAmount" min="1000" max="500000" step="1000" value="50000" oninput="updateCalculator()">
+                        <div class="d-flex justify-content-between">
+                            <small>₱1,000</small>
+                            <small>₱500,000</small>
+                        </div>
+                    </div>
+
+                    <!-- Loan Term -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Loan Term: <span id="termValue">12</span> months</label>
+                        <input type="range" class="form-range" id="loanTerm" min="6" max="60" step="6" value="12" oninput="updateCalculator()">
+                        <div class="d-flex justify-content-between">
+                            <small>6 months</small>
+                            <small>60 months</small>
+                        </div>
+                    </div>
+
+                    <!-- Customer Information -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Customer Information (Optional)</label>
+                        <input type="text" class="form-control mb-2" id="customerName" placeholder="Customer Full Name">
+                        <input type="text" class="form-control" id="pensionNumber" placeholder="Pension Number">
+                    </div>
+
+                    <!-- Calculation Results -->
+                    <div class="result-card">
+                        <h5 class="text-center mb-3">Loan Summary</h5>
+                        <div class="row text-center">
+                            <div class="col-6 mb-3">
+                                <small>Monthly Payment</small>
+                                <div class="h4" id="monthlyPayment">₱4,349</div>
+                            </div>
+                            <div class="col-6 mb-3">
+                                <small>Total Interest</small>
+                                <div class="h4" id="totalInterest">₱2,188</div>
+                            </div>
+                            <div class="col-6">
+                                <small>Total Payable</small>
+                                <div class="h5" id="totalPayable">₱52,188</div>
+                            </div>
+                            <div class="col-6">
+                                <small>Interest Rate</small>
+                                <div class="h5" id="interestRate">8%</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button class="btn btn-light w-100 mt-3" onclick="generateContract()">
+                        <i class="bi bi-file-earmark-pdf me-2"></i>Generate Contract
+                    </button>
+                </div>
+            </div>
+
+            <!-- Contract Preview -->
+            <div class="col-lg-6">
+                <div class="contract-section">
+                    <div class="d-flex justify-content-between align-items-center mb-4 no-print">
+                        <h4><i class="bi bi-file-text me-2"></i>Contract Preview</h4>
+                        <button class="btn btn-success" onclick="window.print()">
+                            <i class="bi bi-printer me-2"></i>Print Contract
+                        </button>
+                    </div>
+
+                    <div class="printable-contract" id="contractContent">
+                        <!-- Contract content will be generated here -->
+                        <div class="text-center text-muted">
+                            <i class="bi bi-file-earmark-text display-4"></i>
+                            <p class="mt-3">Configure the loan details to generate a contract</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize calculator
+        document.addEventListener('DOMContentLoaded', function() {
+            updateCalculator();
+        });
+
+        function updateInterestRate() {
+            updateCalculator();
+        }
+
+        function updateCalculator() {
+            // Get values
+            const loanAmount = parseInt(document.getElementById('loanAmount').value);
+            const loanTerm = parseInt(document.getElementById('loanTerm').value);
+            const loanType = document.getElementById('loanType');
+            const interestRate = parseFloat(loanType.options[loanType.selectedIndex].getAttribute('data-rate'));
+            
+            // Update display values
+            document.getElementById('amountValue').textContent = loanAmount.toLocaleString();
+            document.getElementById('termValue').textContent = loanTerm;
+            document.getElementById('interestRate').textContent = interestRate + '%';
+            
+            // Calculate loan details
+            const monthlyRate = interestRate / 100 / 12;
+            const monthlyPayment = loanAmount * monthlyRate * Math.pow(1 + monthlyRate, loanTerm) / 
+                                 (Math.pow(1 + monthlyRate, loanTerm) - 1);
+            const totalPayable = monthlyPayment * loanTerm;
+            const totalInterest = totalPayable - loanAmount;
+            
+            // Update results
+            document.getElementById('monthlyPayment').textContent = '₱' + Math.round(monthlyPayment).toLocaleString();
+            document.getElementById('totalInterest').textContent = '₱' + Math.round(totalInterest).toLocaleString();
+            document.getElementById('totalPayable').textContent = '₱' + Math.round(totalPayable).toLocaleString();
+        }
+
+        function generateContract() {
+            const loanAmount = parseInt(document.getElementById('loanAmount').value);
+            const loanTerm = parseInt(document.getElementById('loanTerm').value);
+            const loanType = document.getElementById('loanType');
+            const interestRate = parseFloat(loanType.options[loanType.selectedIndex].getAttribute('data-rate'));
+            const customerName = document.getElementById('customerName').value || '____________________';
+            const pensionNumber = document.getElementById('pensionNumber').value || '____________________';
+            
+            // Calculate loan details
+            const monthlyRate = interestRate / 100 / 12;
+            const monthlyPayment = loanAmount * monthlyRate * Math.pow(1 + monthlyRate, loanTerm) / 
+                                 (Math.pow(1 + monthlyRate, loanTerm) - 1);
+            const totalPayable = monthlyPayment * loanTerm;
+            const totalInterest = totalPayable - loanAmount;
+            
+            const today = new Date();
+            const contractDate = today.toLocaleDateString();
+            const dueDate = new Date(today.setMonth(today.getMonth() + loanTerm)).toLocaleDateString();
+            
+            const contractHTML = `
+                <div class="contract-header">
+                    <h2>PENSION LOAN AGREEMENT</h2>
+                    <p class="mb-0">Loan Contract No: PL-${Date.now().toString().slice(-6)}</p>
+                </div>
+
+                <div class="contract-section">
+                    <h4>PARTIES</h4>
+                    <p>This Loan Agreement is made and entered into on ${contractDate} between:</p>
+                    <p><strong>LENDER:</strong> Pension Loan System, a duly registered financial institution</p>
+                    <p><strong>BORROWER:</strong> ${customerName}, Pension Number: ${pensionNumber}</p>
+                </div>
+
+                <div class="contract-section">
+                    <h4>LOAN TERMS</h4>
+                    <table class="table table-bordered">
+                        <tr>
+                            <td><strong>Loan Amount</strong></td>
+                            <td>₱${loanAmount.toLocaleString()}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Loan Type</strong></td>
+                            <td>${loanType.options[loanType.selectedIndex].text}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Interest Rate</strong></td>
+                            <td>${interestRate}% per annum</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Loan Term</strong></td>
+                            <td>${loanTerm} months</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Monthly Payment</strong></td>
+                            <td>₱${Math.round(monthlyPayment).toLocaleString()}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Total Payable</strong></td>
+                            <td>₱${Math.round(totalPayable).toLocaleString()}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Total Interest</strong></td>
+                            <td>₱${Math.round(totalInterest).toLocaleString()}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Final Payment Date</strong></td>
+                            <td>${dueDate}</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div class="contract-section">
+                    <h4>REPAYMENT TERMS</h4>
+                    <p>1. The Borrower agrees to repay the loan through automatic pension deduction.</p>
+                    <p>2. Monthly payments of ₱${Math.round(monthlyPayment).toLocaleString()} will be deducted from the borrower's pension.</p>
+                    <p>3. The first payment is due one month from the disbursement date.</p>
+                    <p>4. Late payments will incur additional charges as per company policy.</p>
+                </div>
+
+                <div class="contract-section">
+                    <h4>SIGNATURES</h4>
+                    <div class="row mt-4">
+                        <div class="col-6">
+                            <div class="signature-line">
+                                <p class="text-center"><strong>BORROWER</strong></p>
+                                <p class="text-center mt-4">${customerName}</p>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="signature-line">
+                                <p class="text-center"><strong>LENDER REPRESENTATIVE</strong></p>
+                                <p class="text-center mt-4">Authorized Signatory</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-center mt-4">
+                    <small>Generated on ${new Date().toLocaleString()} • Pension Loan System</small>
+                </div>
+            `;
+            
+            document.getElementById('contractContent').innerHTML = contractHTML;
+        }
+    </script>
+</body>
+</html>

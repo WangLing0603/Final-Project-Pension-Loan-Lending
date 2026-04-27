@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %> - Millenium Cash</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        .loan-card {
+            transition: transform 0.2s;
+            border-left: 4px solid;
+            margin-bottom: 15px;
+        }
+        .loan-card:hover { transform: translateY(-2px); }
+        .loan-card.pending { border-left-color: #ffc107; }
+        .loan-card.approved { border-left-color: #28a745; }
+        .loan-card.disbursed { border-left-color: #17a2b8; }
+        .loan-card.rejected { border-left-color: #dc3545; }
+        .status-badge { font-size: 12px; padding: 5px 10px; }
+        .payment-modal { max-width: 600px; }
+        .installment-list { max-height: 300px; overflow-y: auto; }
+        .installment-item {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .installment-item:hover { background: #f8f9fa; }
+        .installment-item.selected { background: #e3f2fd; border-left: 3px solid #007bff; }
+        .filter-active { font-weight: bold; background-color: #007bff; color: white; }
+        .quick-payment-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            z-index: 1000;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            font-size: 24px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/dashboard">
+                <i class="bi bi-cash-coin me-2"></i>Millenium Cash
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="/dashboard">Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="/loans">Loan Applications</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/employee/register-customer">Register Customer</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/employee/pension-withdrawals">Pension Withdrawals</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/employee/collection-postings">Collection Postings</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/employee/payments">Payment Posting</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/profile">Profile</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/logout">Logout</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container my-4">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="mb-1"><%= title %></h2>
+                <p class="text-muted mb-0">Manage loan applications and post payments</p>
+            </div>
+            <div>
+                <a href="/employee/register-customer" class="btn btn-success">
+                    <i class="bi bi-person-plus me-2"></i>New Customer
+                </a>
+            </div>
+        </div>
+
+        <!-- Alert Messages -->
+        <% if (success) { %>
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i>
+            <%= success %>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        <% } %>
+        
+        <% if (error) { %>
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            <%= error %>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        <% } %>
+
+        <!-- Stats Summary -->
+        <div class="row mb-4">
+            <div class="col-md-3 mb-3">
+                <div class="card bg-primary text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-0">Total Loans</h6>
+                                <h3 class="mb-0"><%= loans ? loans.length : 0 %></h3>
+                            </div>
+                            <i class="bi bi-files display-4"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card bg-warning text-dark">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-0">Pending</h6>
+                                <h3 class="mb-0">
+                                    <%= loans ? loans.filter(l => l.status === 'pending').length : 0 %>
+                                </h3>
+                            </div>
+                            <i class="bi bi-hourglass-split display-4"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card bg-success text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-0">Approved</h6>
+                                <h3 class="mb-0">
+                                    <%= loans ? loans.filter(l => l.status === 'approved').length : 0 %>
+                                </h3>
+                            </div>
+                            <i class="bi bi-check-circle display-4"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card bg-info text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-0">Disbursed</h6>
+                                <h3 class="mb-0">
+                                    <%= loans ? loans.filter(l => l.status === 'disbursed').length : 0 %>
+                                </h3>
+                            </div>
+                            <i class="bi bi-cash-stack display-4"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-8">
+                        <label class="form-label fw-bold">Filter by Status:</label>
+                        <div class="btn-group" role="group">
+                            <a href="/loans?status=all" class="btn btn-outline-primary <%= currentFilter === 'all' ? 'active' : '' %>">All</a>
+                            <a href="/loans?status=pending" class="btn btn-outline-warning <%= currentFilter === 'pending' ? 'active' : '' %>">Pending</a>
+                            <a href="/loans?status=approved" class="btn btn-outline-success <%= currentFilter === 'approved' ? 'active' : '' %>">Approved</a>
+                            <a href="/loans?status=rejected" class="btn btn-outline-danger <%= currentFilter === 'rejected' ? 'active' : '' %>">Rejected</a>
+                            <a href="/loans?status=disbursed" class="btn btn-outline-info <%= currentFilter === 'disbursed' ? 'active' : '' %>">Disbursed</a>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="searchInput" placeholder="Search by customer name or loan ID...">
+                            <button class="btn btn-primary" onclick="searchLoans()">
+                                <i class="bi bi-search"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loans List -->
+        <div class="row" id="loansContainer">
+            <% if (loans && loans.length > 0) { %>
+                <% loans.forEach(loan => { %>
+                    <div class="col-md-6 col-lg-4 mb-4 loan-item" data-status="<%= loan.status %>" 
+                         data-name="<%= (loan.first_name + ' ' + loan.last_name).toLowerCase() %>"
+                         data-id="<%= loan.loan_id %>">
+                        <div class="card loan-card <%= loan.status %> h-100">
+                            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                                <div>
+                                    <span class="badge bg-dark">#<%= loan.loan_id %></span>
+                                    <span class="badge bg-secondary ms-2"><%= loan.loan_type || 'Regular' %></span>
+                                </div>
+                                <span class="badge bg-<%= 
+                                    loan.status === 'approved' ? 'success' : 
+                                    loan.status === 'pending' ? 'warning' : 
+                                    loan.status === 'rejected' ? 'danger' : 
+                                    loan.status === 'disbursed' ? 'info' : 'secondary' 
+                                %> status-badge">
+                                    <i class="bi bi-<%= 
+                                        loan.status === 'approved' ? 'check-circle' : 
+                                        loan.status === 'pending' ? 'hourglass' : 
+                                        loan.status === 'rejected' ? 'x-circle' : 
+                                        loan.status === 'disbursed' ? 'cash-stack' : 'question'
+                                    %>"></i>
+                                    <%= loan.status.toUpperCase() %>
+                                </span>
+                            </div>
+                            <div class="card-body">
+                                <h5 class="card-title">
+                                    <%= loan.first_name %> <%= loan.last_name %>
+                                </h5>
+                                <p class="text-muted small mb-2">
+                                    <i class="bi bi-card-id"></i> <%= loan.pension_number || 'N/A' %>
+                                </p>
+                                <div class="row mb-3">
+                                    <div class="col-6">
+                                        <small class="text-muted">Loan Amount</small>
+                                        <h6 class="mb-0 text-primary">₱<%= parseFloat(loan.loan_amount).toLocaleString() %></h6>
+                                    </div>
+                                    <div class="col-6">
+                                        <small class="text-muted">Monthly Payment</small>
+                                        <h6 class="mb-0 text-success">₱<%= parseFloat(loan.monthly_payment).toLocaleString() %></h6>
+                                    </div>
+                                </div>
+                                <div class="row mb-2">
+                                    <div class="col-6">
+                                        <small class="text-muted">Interest Rate</small>
+                                        <div><%= loan.interest_rate %>%</div>
+                                    </div>
+                                    <div class="col-6">
+                                        <small class="text-muted">Duration</small>
+                                        <div><%= loan.duration_months %> months</div>
+                                    </div>
+                                </div>
+                                <div class="row mb-3">
+                                    <div class="col-12">
+                                        <small class="text-muted">Purpose</small>
+                                        <div class="small"><%= loan.purpose || 'Not specified' %></div>
+                                    </div>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <small class="text-muted">
+                                        <i class="bi bi-calendar3"></i> 
+                                        Applied: <%= new Date(loan.applied_date).toLocaleDateString() %>
+                                    </small>
+                                </div>
+                            </div>
+                            <div class="card-footer bg-white">
+                                <div class="btn-group w-100" role="group">
+                                    <button class="btn btn-sm btn-outline-primary" onclick="viewLoanDetails(<%= loan.loan_id %>)">
+                                        <i class="bi bi-eye"></i> Details
+                                    </button>
+                                    <% if (loan.status === 'approved' || loan.status === 'disbursed') { %>
+                                        <button class="btn btn-sm btn-outline-success" onclick="postPayment(<%= loan.loan_id %>)">
+                                            <i class="bi bi-credit-card"></i> Pay
+                                        </button>
+                                    <% } %>
+                                    <% if (loan.status === 'pending' && (user.user_type === 'manager' || user.user_type === 'admin')) { %>
+                                        <button class="btn btn-sm btn-outline-success" onclick="approveLoan(<%= loan.loan_id %>)">
+                                            <i class="bi bi-check-lg"></i> Approve
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-danger" onclick="rejectLoan(<%= loan.loan_id %>)">
+                                            <i class="bi bi-x-lg"></i> Reject
+                                        </button>
+                                    <% } %>
+                                    <% if (loan.status === 'approved' && (user.user_type === 'employee' || user.user_type === 'manager')) { %>
+                                        <button class="btn btn-sm btn-outline-info" onclick="disburseLoan(<%= loan.loan_id %>)">
+                                            <i class="bi bi-cash"></i> Disburse
+                                        </button>
+                                    <% } %>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                <% }); %>
+            <% } else { %>
+                <div class="col-12">
+                    <div class="text-center py-5">
+                        <i class="bi bi-files display-1 text-muted"></i>
+                        <h4 class="mt-3 text-muted">No Loan Applications Found</h4>
+                        <p class="text-muted">Start by registering a customer and creating a loan application.</p>
+                        <a href="/employee/register-customer" class="btn btn-primary">
+                            <i class="bi bi-person-plus me-2"></i>Register Customer
+                        </a>
+                    </div>
+                </div>
+            <% } %>
+        </div>
+    </div>
+
+    <!-- Loan Details Modal -->
+    <div class="modal fade" id="loanDetailsModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">
+                        <i class="bi bi-file-text"></i> Loan Details
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="loanDetailsContent">
+                    <div class="text-center">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Post Payment Modal -->
+    <div class="modal fade" id="postPaymentModal" tabindex="-1">
+        <div class="modal-dialog modal-lg payment-modal">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title">
+                        <i class="bi bi-credit-card"></i> Post Loan Payment
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="paymentForm" action="/employee/process-payment" method="POST">
+                        <input type="hidden" name="loan_id" id="payment_loan_id">
+                        
+                        <!-- Loan Summary -->
+                        <div class="alert alert-info mb-3" id="loanSummary">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <strong>Customer:</strong> <span id="summaryCustomer">-</span><br>
+                                    <strong>Loan Amount:</strong> ₱<span id="summaryAmount">0</span>
+                                </div>
+                                <div>
+                                    <strong>Monthly Payment:</strong> ₱<span id="summaryMonthly">0</span><br>
+                                    <strong>Remaining Balance:</strong> ₱<span id="summaryBalance">0</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Installment Selection -->
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Select Installment to Pay:</label>
+                            <div class="installment-list" id="installmentList">
+                                <div class="text-center text-muted">Loading installments...</div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Payment Date *</label>
+                                <input type="date" class="form-control" name="payment_date" required 
+                                       value="<%= new Date().toISOString().split('T')[0] %>">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Amount Paid *</label>
+                                <input type="number" step="0.01" class="form-control" name="amount_paid" id="amount_paid" required>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Payment Method *</label>
+                                <select class="form-select" name="payment_method" required>
+                                    <option value="cash">Cash</option>
+                                    <option value="bank_transfer">Bank Transfer</option>
+                                    <option value="gcash">GCash</option>
+                                    <option value="paymaya">PayMaya</option>
+                                    <option value="check">Check</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Reference Number</label>
+                                <input type="text" class="form-control" name="reference_number" 
+                                       placeholder="Transaction ID / Check Number">
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Notes (Optional)</label>
+                            <textarea class="form-control" name="notes" rows="2" 
+                                      placeholder="Additional notes about this payment"></textarea>
+                        </div>
+
+                        <input type="hidden" name="installment_number" id="selected_installment">
+
+                        <div class="alert alert-warning">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                            <strong>Note:</strong> Partial payments are allowed. A receipt will be generated automatically.
+                        </div>
+
+                        <button type="submit" class="btn btn-success w-100">
+                            <i class="bi bi-check-circle"></i> Process Payment
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Approve/Reject Modal -->
+    <div class="modal fade" id="approvalModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="approvalModalTitle">Approve Loan</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="approvalForm">
+                        <input type="hidden" id="approval_loan_id">
+                        <input type="hidden" id="approval_action">
+                        <div class="mb-3" id="reasonDiv" style="display:none;">
+                            <label class="form-label">Rejection Reason</label>
+                            <textarea class="form-control" id="rejection_reason" rows="3" 
+                                      placeholder="Please provide reason for rejection"></textarea>
+                        </div>
+                        <div class="alert alert-info" id="approvalMessage"></div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="confirmApproval()">Confirm</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Payment FAB -->
+    <button class="btn btn-success quick-payment-btn" onclick="showQuickPayment()">
+        <i class="bi bi-plus-lg"></i>
+    </button>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let currentLoanId = null;
+
+        // Search functionality
+        function searchLoans() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const loanItems = document.querySelectorAll('.loan-item');
+            
+            loanItems.forEach(item => {
+                const name = item.getAttribute('data-name');
+                const id = item.getAttribute('data-id');
+                
+                if (name.includes(searchTerm) || id.includes(searchTerm)) {
+                    item.style.display = '';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
+
+        // View loan details
+        function viewLoanDetails(loanId) {
+            fetch(`/api/loan/${loanId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const loan = data.loan;
+                        document.getElementById('loanDetailsContent').innerHTML = `
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6>Loan Information</h6>
+                                    <table class="table table-sm table-bordered">
+                                        <tr><th>Loan ID:</th><td>#${loan.loan_id}</td></tr>
+                                        <tr><th>Loan Amount:</th><td>₱${parseFloat(loan.loan_amount).toLocaleString()}</td></tr>
+                                        <tr><th>Interest Rate:</th><td>${loan.interest_rate}%</td></tr>
+                                        <tr><th>Duration:</th><td>${loan.duration_months} months</td></tr>
+                                        <tr><th>Monthly Payment:</th><td>₱${parseFloat(loan.monthly_payment).toLocaleString()}</td></tr>
+                                        <tr><th>Total Payable:</th><td>₱${parseFloat(loan.total_payable).toLocaleString()}</td></tr>
+                                        <tr><th>Total Interest:</th><td>₱${parseFloat(loan.total_interest).toLocaleString()}</td></tr>
+                                        <tr><th>Status:</th><td><span class="badge bg-${getStatusColor(loan.status)}">${loan.status.toUpperCase()}</span></td></tr>
+                                        <tr><th>Applied Date:</th><td>${new Date(loan.applied_date).toLocaleDateString()}</td></tr>
+                                        ${loan.approved_date ? `<tr><th>Approved Date:</th><td>${new Date(loan.approved_date).toLocaleDateString()}</td></tr>` : ''}
+                                        ${loan.disbursement_date ? `<tr><th>Disbursement Date:</th><td>${new Date(loan.disbursement_date).toLocaleDateString()}</td></tr>` : ''}
+                                    </table>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6>Customer Information</h6>
+                                    <table class="table table-sm table-bordered">
+                                        <tr><th>Name:</th><td>${loan.first_name} ${loan.last_name}</td></tr>
+                                        <tr><th>Pension Number:</th><td>${loan.pension_number || 'N/A'}</td></tr>
+                                        <tr><th>Mobile Number:</th><td>${loan.mobile_number || 'N/A'}</td></tr>
+                                        <tr><th>Email:</th><td>${loan.email || 'N/A'}</td></tr>
+                                        <tr><th>Monthly Pension:</th><td>₱${parseFloat(loan.monthly_pension || 0).toLocaleString()}</td></tr>
+                                        <tr><th>Pension System:</th><td>${loan.pension_system || 'N/A'}</td></tr>
+                                    </table>
+                                    ${loan.atm_passbook_number ? `
+                                    <h6 class="mt-3">Disbursement Details</h6>
+                                    <table class="table table-sm table-bordered">
+                                        <tr><th>ATM/Passbook #:</th><td>${loan.atm_passbook_number}</td></tr>
+                                        <tr><th>Bank Name:</th><td>${loan.bank_name || 'N/A'}</td></tr>
+                                    </table>
+                                    ` : ''}
+                                </div>
+                            </div>
+                            <div class="mt-3 text-end">
+                                ${loan.status === 'approved' || loan.status === 'disbursed' ? 
+                                    `<button class="btn btn-success" onclick="postPayment(${loan.loan_id})">
+                                        <i class="bi bi-credit-card"></i> Post Payment
+                                    </button>` : ''}
+                            </div>
+                        `;
+                        new bootstrap.Modal(document.getElementById('loanDetailsModal')).show();
+                    }
+                });
+        }
+
+        // Post payment modal
+        function postPayment(loanId) {
+            currentLoanId = loanId;
+            document.getElementById('payment_loan_id').value = loanId;
+            
+            // Load loan summary
+            fetch(`/api/loan/${loanId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const loan = data.loan;
+                        document.getElementById('summaryCustomer').innerHTML = `${loan.first_name} ${loan.last_name}`;
+                        document.getElementById('summaryAmount').innerHTML = parseFloat(loan.loan_amount).toLocaleString();
+                        document.getElementById('summaryMonthly').innerHTML = parseFloat(loan.monthly_payment).toLocaleString();
+                        document.getElementById('amount_paid').value = loan.monthly_payment;
+                        
+                        // Load remaining balance
+                        fetch(`/api/loan/${loanId}/remaining-balance`)
+                            .then(res => res.json())
+                            .then(balanceData => {
+                                document.getElementById('summaryBalance').innerHTML = parseFloat(balanceData.remaining_balance || 0).toLocaleString();
+                            });
+                    }
+                });
+            
+            // Load installments
+            loadInstallments(loanId);
+            
+            new bootstrap.Modal(document.getElementById('postPaymentModal')).show();
+        }
+
+        // Load installments for a loan
+        function loadInstallments(loanId) {
+            fetch(`/api/loan/${loanId}/installments`)
+                .then(response => response.json())
+                .then(data => {
+                    const container = document.getElementById('installmentList');
+                    if (data.success && data.installments.length > 0) {
+                        container.innerHTML = data.installments.map(inst => `
+                            <div class="installment-item" onclick="selectInstallment(${inst.installment_number}, ${inst.total_amount})">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <strong>Installment ${inst.installment_number}</strong>
+                                        <br>
+                                        <small class="text-muted">Due: ${new Date(inst.due_date).toLocaleDateString()}</small>
+                                    </div>
+                                    <div class="text-end">
+                                        <strong>₱${parseFloat(inst.total_amount).toLocaleString()}</strong>
+                                        <br>
+                                        <span class="badge bg-${inst.status === 'paid' ? 'success' : inst.status === 'overdue' ? 'danger' : 'warning'}">
+                                            ${inst.status}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('');
+                    } else {
+                        container.innerHTML = '<div class="text-center text-muted">No pending installments found</div>';
+                    }
+                });
+        }
+
+        // Select an installment
+        function selectInstallment(installmentNumber, amount) {
+            // Remove selected class from all
+            document.querySelectorAll('.installment-item').forEach(item => {
+                item.classList.remove('selected');
+            });
+            // Add selected class to clicked item
+            event.currentTarget.classList.add('selected');
+            // Set values
+            document.getElementById('selected_installment').value = installmentNumber;
+            document.getElementById('amount_paid').value = amount;
+        }
+
+        // Approve loan
+        function approveLoan(loanId) {
+            document.getElementById('approval_loan_id').value = loanId;
+            document.getElementById('approval_action').value = 'approve';
+            document.getElementById('approvalModalTitle').innerHTML = 'Approve Loan';
+            document.getElementById('approvalMessage').innerHTML = 'Are you sure you want to approve this loan application?';
+            document.getElementById('reasonDiv').style.display = 'none';
+            new bootstrap.Modal(document.getElementById('approvalModal')).show();
+        }
+
+        // Reject loan
+        function rejectLoan(loanId) {
+            document.getElementById('approval_loan_id').value = loanId;
+            document.getElementById('approval_action').value = 'reject';
+            document.getElementById('approvalModalTitle').innerHTML = 'Reject Loan';
+            document.getElementById('approvalMessage').innerHTML = 'Please provide a reason for rejecting this loan application.';
+            document.getElementById('reasonDiv').style.display = 'block';
+            new bootstrap.Modal(document.getElementById('approvalModal')).show();
+        }
+
+        // Confirm approval/rejection
+        function confirmApproval() {
+            const loanId = document.getElementById('approval_loan_id').value;
+            const action = document.getElementById('approval_action').value;
+            const reason = document.getElementById('rejection_reason').value;
+            
+            fetch(`/approve-loan/${loanId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    status: action === 'approve' ? 'approved' : 'rejected',
+                    reason: reason
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            });
+        }
+
+        // Disburse loan
+        function disburseLoan(loanId) {
+            if (confirm('Mark this loan as disbursed? This will release the funds to the customer.')) {
+                fetch(`/disburse-loan/${loanId}`, { method: 'POST' })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            location.reload();
+                        } else {
+                            alert('Error: ' + data.message);
+                        }
+                    });
+            }
+        }
+
+        // Show quick payment (search for loan)
+        function showQuickPayment() {
+            const loanId = prompt('Enter Loan ID to post payment:');
+            if (loanId && !isNaN(loanId)) {
+                postPayment(loanId);
+            } else if (loanId) {
+                alert('Please enter a valid Loan ID');
+            }
+        }
+
+        // Get status color
+        function getStatusColor(status) {
+            const colors = {
+                'approved': 'success',
+                'pending': 'warning',
+                'rejected': 'danger',
+                'disbursed': 'info'
+            };
+            return colors[status] || 'secondary';
+        }
+
+        // Enter key search
+        document.getElementById('searchInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                searchLoans();
+            }
+        });
+
+        // Auto-dismiss alerts
+        setTimeout(() => {
+            document.querySelectorAll('.alert').forEach(alert => {
+                const bsAlert = new bootstrap.Alert(alert);
+                bsAlert.close();
+            });
+        }, 5000);
+    </script>
+</body>
+</html>

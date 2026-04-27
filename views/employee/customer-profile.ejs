@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Profile - <%= customer.first_name %> <%= customer.last_name %></title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        .profile-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 30px;
+        }
+        .info-card {
+            border-radius: 10px;
+            border: none;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            transition: transform 0.2s ease;
+        }
+        .info-card:hover {
+            transform: translateY(-2px);
+        }
+        .customer-avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 36px;
+            margin: 0 auto;
+        }
+        .stat-badge {
+            font-size: 0.8rem;
+            padding: 6px 12px;
+        }
+        .tab-content {
+            background: white;
+            border-radius: 0 0 10px 10px;
+            padding: 20px;
+        }
+        .loan-card {
+            border-left: 4px solid #007bff;
+            border-radius: 8px;
+        }
+        .loan-card.pending { border-left-color: #ffc107; }
+        .loan-card.approved { border-left-color: #28a745; }
+        .loan-card.rejected { border-left-color: #dc3545; }
+        .loan-card.disbursed { border-left-color: #17a2b8; }
+        .action-buttons {
+            margin-bottom: 20px;
+        }
+        .nav-tabs .nav-link.active {
+            font-weight: bold;
+            border-bottom: 3px solid #007bff;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/dashboard">
+                <i class="bi bi-cash-coin me-2"></i>Pension Loan System
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="/dashboard">Dashboard</a>
+                <a class="nav-link" href="/loans">Loan Applications</a>
+                <a class="nav-link" href="/employee/register-customer">Register Customer</a>
+                <a class="nav-link" href="/profile">Profile</a>
+                <a class="nav-link" href="/logout">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container my-4">
+        <!-- Back Button -->
+        <div class="mb-4">
+            <a href="/dashboard" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-2"></i>Back to Dashboard
+            </a>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="action-buttons">
+            <div class="d-flex gap-2 justify-content-between">
+                <div>
+                    <h3 class="mb-0">Customer Profile</h3>
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="/employee/customer/<%= customer.customer_id %>/loans" class="btn btn-info">
+                        <i class="bi bi-clipboard-data me-2"></i>View Loans
+                    </a>
+                    <a href="/employee/customer/<%= customer.customer_id %>/create-loan" class="btn btn-success">
+                        <i class="bi bi-plus-circle me-2"></i>Create New Loan
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Profile Header -->
+        <div class="profile-header mb-4">
+            <div class="row align-items-center">
+                <div class="col-md-2 text-center">
+                    <div class="customer-avatar mb-3">
+                        <%= (customer.first_name?.[0] || '') + (customer.last_name?.[0] || '') %>
+                    </div>
+                </div>
+                <div class="col-md-8">
+                    <h2 class="mb-2"><%= customer.first_name %> <%= customer.last_name %></h2>
+                    <p class="mb-1">
+                        <i class="bi bi-person-badge me-2"></i>
+                        Pension Number: <strong><%= customer.pension_number %></strong>
+                    </p>
+                    <p class="mb-0">
+                        <i class="bi bi-cash-coin me-2"></i>
+                        Monthly Pension: <strong>₱<%= (customer.monthly_pension || 0).toLocaleString() %></strong>
+                    </p>
+                </div>
+                <div class="col-md-2 text-end">
+                    <span class="badge bg-success stat-badge">
+                        <i class="bi bi-shield-check me-1"></i>Verified Pensioner
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="row mb-4">
+            <div class="col-md-3 mb-3">
+                <div class="card info-card bg-primary text-white">
+                    <div class="card-body text-center">
+                        <h3 class="mb-1"><%= loans.length %></h3>
+                        <p class="mb-0">Total Loans</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card info-card bg-success text-white">
+                    <div class="card-body text-center">
+                        <h3 class="mb-1"><%= loans.filter(l => l.status === 'approved' || l.status === 'disbursed').length %></h3>
+                        <p class="mb-0">Active Loans</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card info-card bg-warning text-dark">
+                    <div class="card-body text-center">
+                        <h3 class="mb-1"><%= loans.filter(l => l.status === 'pending').length %></h3>
+                        <p class="mb-0">Pending Loans</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card info-card bg-info text-white">
+                    <div class="card-body text-center">
+                        <h3 class="mb-1">₱<%= loans.reduce((sum, loan) => sum + (parseFloat(loan.loan_amount) || 0), 0).toLocaleString() %></h3>
+                        <p class="mb-0">Total Borrowed</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabs Navigation -->
+        <ul class="nav nav-tabs" id="profileTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="personal-tab" data-bs-toggle="tab" data-bs-target="#personal" type="button">
+                    <i class="bi bi-person me-2"></i>Personal Information
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="loans-tab" data-bs-toggle="tab" data-bs-target="#loans" type="button">
+                    <i class="bi bi-clipboard-data me-2"></i>Loan History
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="beneficiaries-tab" data-bs-toggle="tab" data-bs-target="#beneficiaries" type="button">
+                    <i class="bi bi-people me-2"></i>Beneficiaries
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="documents-tab" data-bs-toggle="tab" data-bs-target="#documents" type="button">
+                    <i class="bi bi-folder me-2"></i>Documents
+                </button>
+            </li>
+        </ul>
+
+        <!-- Tab Content -->
+        <div class="tab-content" id="profileTabsContent">
+            <!-- Personal Information Tab -->
+            <div class="tab-pane fade show active" id="personal" role="tabpanel">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card info-card mb-4">
+                            <div class="card-header bg-light">
+                                <h6 class="mb-0"><i class="bi bi-info-circle me-2"></i>Basic Information</h6>
+                            </div>
+                            <div class="card-body">
+                                <table class="table table-sm">
+                                    <tr>
+                                        <td><strong>Full Name:</strong></td>
+                                        <td><%= customer.first_name %> <%= customer.middle_name || '' %> <%= customer.last_name %> <%= customer.suffix || '' %></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Email:</strong></td>
+                                        <td><%= customer.email %></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Mobile Number:</strong></td>
+                                        <td><%= customer.mobile_number || 'N/A' %></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Telephone:</strong></td>
+                                        <td><%= customer.telephone_number || 'N/A' %></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Gender:</strong></td>
+                                        <td><%= customer.gender || 'N/A' %></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Civil Status:</strong></td>
+                                        <td><%= customer.civil_status || 'N/A' %></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Date of Birth:</strong></td>
+                                        <td><%= customer.date_of_birth ? new Date(customer.date_of_birth).toLocaleDateString() : 'N/A' %></td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card info-card mb-4">
+                            <div class="card-header bg-light">
+                                <h6 class="mb-0"><i class="bi bi-geo-alt me-2"></i>Address Information</h6>
+                            </div>
+                            <div class="card-body">
+                                <table class="table table-sm">
+                                    <tr>
+                                        <td><strong>Street Address:</strong></td>
+                                        <td><%= customer.street_address || 'N/A' %></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Barangay:</strong></td>
+                                        <td><%= customer.barangay || 'N/A' %></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>City:</strong></td>
+                                        <td><%= customer.city || 'N/A' %></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Province:</strong></td>
+                                        <td><%= customer.province || 'N/A' %></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Region:</strong></td>
+                                        <td><%= customer.region || 'N/A' %></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>ZIP Code:</strong></td>
+                                        <td><%= customer.zip_code || 'N/A' %></td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card info-card">
+                            <div class="card-header bg-light">
+                                <h6 class="mb-0"><i class="bi bi-cash-coin me-2"></i>Pension Information</h6>
+                            </div>
+                            <div class="card-body">
+                                <table class="table table-sm">
+                                    <tr>
+                                        <td><strong>Pension System:</strong></td>
+                                        <td><%= customer.pension_system || 'N/A' %></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Pension Number:</strong></td>
+                                        <td><%= customer.pension_number %></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Monthly Pension:</strong></td>
+                                        <td>₱<%= (customer.monthly_pension || 0).toLocaleString() %></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Pension Start Date:</strong></td>
+                                        <td><%= customer.pension_start_date ? new Date(customer.pension_start_date).toLocaleDateString() : 'N/A' %></td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card info-card">
+                            <div class="card-header bg-light">
+                                <h6 class="mb-0"><i class="bi bi-briefcase me-2"></i>Employment History</h6>
+                            </div>
+                            <div class="card-body">
+                                <table class="table table-sm">
+                                    <tr>
+                                        <td><strong>Last Employer:</strong></td>
+                                        <td><%= customer.last_employer || 'N/A' %></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Last Position:</strong></td>
+                                        <td><%= customer.last_position || 'N/A' %></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Years of Service:</strong></td>
+                                        <td><%= customer.years_of_service || 'N/A' %></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Retirement Date:</strong></td>
+                                        <td><%= customer.retirement_date ? new Date(customer.retirement_date).toLocaleDateString() : 'N/A' %></td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Loan History Tab -->
+            <div class="tab-pane fade" id="loans" role="tabpanel">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5>Loan Applications</h5>
+                    <a href="/employee/customer/<%= customer.customer_id %>/create-loan" class="btn btn-primary">
+                        <i class="bi bi-plus-circle me-2"></i>Create New Loan
+                    </a>
+                </div>
+
+                <% if (loans.length > 0) { %>
+                    <div class="row">
+                        <% loans.forEach(loan => { %>
+                        <div class="col-md-6 mb-3">
+                            <div class="card loan-card <%= loan.status %>">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <h6 class="card-title mb-0">₱<%= parseFloat(loan.loan_amount).toLocaleString() %></h6>
+                                        <span class="badge bg-<%= 
+                                            loan.status === 'pending' ? 'warning' : 
+                                            loan.status === 'approved' ? 'success' : 
+                                            loan.status === 'rejected' ? 'danger' : 
+                                            loan.status === 'disbursed' ? 'info' : 'secondary'
+                                        %>">
+                                            <%= loan.status.toUpperCase() %>
+                                        </span>
+                                    </div>
+                                    <p class="card-text small text-muted mb-2">
+                                        <i class="bi bi-calendar me-1"></i>
+                                        Applied: <%= new Date(loan.applied_date).toLocaleDateString() %>
+                                    </p>
+                                    <p class="card-text small mb-2">
+                                        <strong>Type:</strong> <%= loan.loan_type || 'Regular' %>
+                                    </p>
+                                    <p class="card-text small mb-2">
+                                        <strong>Purpose:</strong> <%= loan.purpose || 'N/A' %>
+                                    </p>
+                                    <% if (loan.approved_date) { %>
+                                    <p class="card-text small mb-2">
+                                        <strong>Approved:</strong> <%= new Date(loan.approved_date).toLocaleDateString() %>
+                                    </p>
+                                    <% } %>
+                                    <div class="mt-2">
+                                        <a href="/loans?customer=<%= customer.customer_id %>" class="btn btn-sm btn-outline-primary">
+                                            View Details
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <% }); %>
+                    </div>
+                <% } else { %>
+                    <div class="text-center py-5">
+                        <i class="bi bi-clipboard-x display-1 text-muted"></i>
+                        <h5 class="mt-3">No Loan Applications</h5>
+                        <p class="text-muted">This customer hasn't applied for any loans yet.</p>
+                        <a href="/employee/customer/<%= customer.customer_id %>/create-loan" class="btn btn-primary">
+                            <i class="bi bi-plus-circle me-2"></i>Create First Loan
+                        </a>
+                    </div>
+                <% } %>
+            </div>
+
+            <!-- Beneficiaries Tab -->
+            <div class="tab-pane fade" id="beneficiaries" role="tabpanel">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5>Beneficiaries</h5>
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addBeneficiaryModal">
+                        <i class="bi bi-plus-circle me-2"></i>Add Beneficiary
+                    </button>
+                </div>
+
+                <% if (beneficiaries && beneficiaries.length > 0) { %>
+                    <div class="row">
+                        <% beneficiaries.forEach(beneficiary => { %>
+                        <div class="col-md-6 mb-3">
+                            <div class="card info-card">
+                                <div class="card-body">
+                                    <h6 class="card-title"><%= beneficiary.full_name %></h6>
+                                    <p class="card-text small mb-1">
+                                        <strong>Relationship:</strong> <%= beneficiary.relationship %>
+                                    </p>
+                                    <p class="card-text small mb-1">
+                                        <strong>Birthdate:</strong> <%= beneficiary.birthdate ? new Date(beneficiary.birthdate).toLocaleDateString() : 'N/A' %>
+                                    </p>
+                                    <p class="card-text small mb-0">
+                                        <strong>Percentage:</strong> <%= beneficiary.percentage %>% of benefits
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <% }); %>
+                    </div>
+                <% } else { %>
+                    <div class="text-center py-5">
+                        <i class="bi bi-people display-1 text-muted"></i>
+                        <h5 class="mt-3">No Beneficiaries</h5>
+                        <p class="text-muted">No beneficiaries have been added for this customer.</p>
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addBeneficiaryModal">
+                            <i class="bi bi-plus-circle me-2"></i>Add First Beneficiary
+                        </button>
+                    </div>
+                <% } %>
+            </div>
+
+            <!-- Documents Tab -->
+            <div class="tab-pane fade" id="documents" role="tabpanel">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5>Customer Documents</h5>
+                    <a href="/employee/customer/<%= customer.customer_id %>/documents" class="btn btn-primary">
+                        <i class="bi bi-folder2-open me-2"></i>View All Documents
+                    </a>
+                </div>
+
+                <% if (documents && documents.length > 0) { %>
+                    <div class="row">
+                        <% documents.forEach(doc => { 
+                            const docTypeNames = {
+                                'aim_passbook': 'AIM Passbook',
+                                'bank_statement': 'Bank Statement',
+                                'proof_of_billing': 'Proof of Billing',
+                                'brgy_clearance': 'Barangay Clearance'
+                            };
+                            const docType = docTypeNames[doc.document_type] || doc.document_type;
+                        %>
+                        <div class="col-md-6 mb-3">
+                            <div class="card info-card">
+                                <div class="card-body">
+                                    <h6 class="card-title"><%= docType %></h6>
+                                    <p class="card-text small mb-2">
+                                        <strong>File:</strong> <%= doc.file_name %>
+                                    </p>
+                                    <p class="card-text small text-muted mb-2">
+                                        <i class="bi bi-calendar me-1"></i>
+                                        Uploaded: <%= new Date(doc.uploaded_at).toLocaleDateString() %>
+                                    </p>
+                                    <div class="mt-2">
+                                        <a href="/<%= doc.file_path %>" target="_blank" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-download me-1"></i>Download
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <% }); %>
+                    </div>
+                <% } else { %>
+                    <div class="text-center py-5">
+                        <i class="bi bi-folder-x display-1 text-muted"></i>
+                        <h5 class="mt-3">No Documents</h5>
+                        <p class="text-muted">No documents have been uploaded for this customer.</p>
+                    </div>
+                <% } %>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Beneficiary Modal -->
+    <div class="modal fade" id="addBeneficiaryModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add Beneficiary</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="beneficiaryForm">
+                        <input type="hidden" name="customer_id" value="<%= customer.customer_id %>">
+                        <div class="mb-3">
+                            <label class="form-label">Full Name</label>
+                            <input type="text" class="form-control" name="full_name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Relationship</label>
+                            <select class="form-control" name="relationship" required>
+                                <option value="">Select Relationship</option>
+                                <option value="Spouse">Spouse</option>
+                                <option value="Child">Child</option>
+                                <option value="Parent">Parent</option>
+                                <option value="Sibling">Sibling</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Birthdate</label>
+                            <input type="date" class="form-control" name="birthdate">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Percentage (%)</label>
+                            <input type="number" class="form-control" name="percentage" min="1" max="100" value="100" required>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="addBeneficiary()">Add Beneficiary</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function addBeneficiary() {
+            const form = document.getElementById('beneficiaryForm');
+            const formData = new FormData(form);
+            
+            fetch('/employee/add-beneficiary', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams(formData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Beneficiary added successfully!');
+                    bootstrap.Modal.getInstance(document.getElementById('addBeneficiaryModal')).hide();
+                    location.reload();
+                } else {
+                    alert('Error adding beneficiary: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error adding beneficiary.');
+            });
+        }
+
+        // Initialize tabs
+        document.addEventListener('DOMContentLoaded', function() {
+            const triggerTabList = [].slice.call(document.querySelectorAll('#profileTabs button'));
+            triggerTabList.forEach(function (triggerEl) {
+                const tabTrigger = new bootstrap.Tab(triggerEl);
+                triggerEl.addEventListener('click', function (event) {
+                    event.preventDefault();
+                    tabTrigger.show();
+                });
+            });
+        });
+    </script>
+</body>
+</html>

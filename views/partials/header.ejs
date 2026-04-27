@@ -1,0 +1,137 @@
+<!-- Top Navigation Header -->
+<nav class="top-navbar navbar navbar-expand-lg">
+    <div class="container-fluid">
+        <!-- Mobile toggle button -->
+        <button class="navbar-toggler d-lg-none" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarMenu">
+            <i class="fas fa-bars"></i>
+        </button>
+        
+        <!-- Page title -->
+        <h4 class="mb-0 navbar-brand">
+            <% if (typeof title !== 'undefined') { %>
+                <%= title %>
+            <% } else { %>
+                Dashboard
+            <% } %>
+        </h4>
+
+        <!-- User info and controls -->
+        <div class="d-flex align-items-center">
+            <!-- Notifications Bell -->
+            <div class="dropdown me-3">
+                <button class="btn btn-outline-secondary position-relative" type="button" data-bs-toggle="dropdown">
+                    <i class="fas fa-bell"></i>
+                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="notification-count">
+                        0
+                    </span>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end" style="min-width: 300px;">
+                    <li class="dropdown-header">Notifications</li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li id="notifications-list">
+                        <div class="text-center p-3">
+                            <i class="fas fa-bell-slash text-muted mb-2" style="font-size: 2rem;"></i>
+                            <p class="text-muted mb-0">No new notifications</p>
+                        </div>
+                    </li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item text-center" href="#">View All Notifications</a></li>
+                </ul>
+            </div>
+
+            <!-- User dropdown -->
+            <div class="dropdown">
+                <button class="btn btn-outline-primary dropdown-toggle d-flex align-items-center" type="button" data-bs-toggle="dropdown">
+                    <div class="user-avatar me-2">
+                        <i class="fas fa-user-circle fa-lg"></i>
+                    </div>
+                    <div class="user-info text-start">
+                        <div class="fw-bold" style="font-size: 0.9rem;"><%= user.full_name %></div>
+                        <div class="text-muted" style="font-size: 0.8rem;">
+                            <%= user.user_type.charAt(0).toUpperCase() + user.user_type.slice(1) %>
+                        </div>
+                    </div>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li>
+                        <a class="dropdown-item" href="/profile">
+                            <i class="fas fa-user me-2"></i>My Profile
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" href="#">
+                            <i class="fas fa-cog me-2"></i>Settings
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" href="#">
+                            <i class="fas fa-question-circle me-2"></i>Help & Support
+                        </a>
+                    </li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li>
+                        <a class="dropdown-item text-danger" href="/logout">
+                            <i class="fas fa-sign-out-alt me-2"></i>Logout
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<!-- Quick Stats Bar (for dashboard pages) -->
+<% if (typeof showStats !== 'undefined' && showStats) { %>
+<div class="quick-stats-bar bg-light py-2 mb-4">
+    <div class="container-fluid">
+        <div class="row g-3">
+            <div class="col-auto">
+                <small class="text-muted">Welcome back, <strong><%= user.full_name %></strong></small>
+            </div>
+            <div class="col-auto ms-auto">
+                <small class="text-muted">
+                    <i class="fas fa-clock me-1"></i>
+                    <span id="current-time"></span>
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+<% } %>
+
+<script>
+    // Update current time
+    function updateTime() {
+        const now = new Date();
+        const timeString = now.toLocaleString('en-PH', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            timeZone: 'Asia/Manila'
+        });
+        document.getElementById('current-time').textContent = timeString;
+    }
+    
+    // Update time immediately and every second
+    updateTime();
+    setInterval(updateTime, 1000);
+    
+    // Load notifications (you can implement this with AJAX)
+    function loadNotifications() {
+        // This would typically make an AJAX call to your backend
+        // For now, it's a placeholder
+        console.log('Loading notifications...');
+    }
+    
+    // Load notifications when dropdown is shown
+    document.addEventListener('DOMContentLoaded', function() {
+        const notificationDropdown = document.querySelector('[data-bs-toggle="dropdown"]');
+        if (notificationDropdown) {
+            notificationDropdown.addEventListener('show.bs.dropdown', loadNotifications);
+        }
+    });
+</script>

@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        .loan-type-card {
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            height: 100%;
+        }
+        .loan-type-card:hover {
+            border-color: #007bff;
+            transform: translateY(-2px);
+        }
+        .loan-type-card.selected {
+            border-color: #007bff;
+            background-color: #f8f9fa;
+        }
+        .calculator-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 10px;
+            padding: 20px;
+        }
+        .pension-info-card {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            border-radius: 10px;
+        }
+        .requirement-badge {
+            font-size: 0.75rem;
+        }
+        .loan-feature {
+            font-size: 0.85rem;
+        }
+        .step-indicator {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            position: relative;
+        }
+        .step-indicator::before {
+            content: '';
+            position: absolute;
+            top: 15px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: #e9ecef;
+            z-index: 1;
+        }
+        .step {
+            text-align: center;
+            position: relative;
+            z-index: 2;
+        }
+        .step-number {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: #e9ecef;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 5px;
+            font-weight: bold;
+        }
+        .step.active .step-number {
+            background: #007bff;
+            color: white;
+        }
+        .step.completed .step-number {
+            background: #28a745;
+            color: white;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/dashboard">
+                <i class="bi bi-cash-coin"></i> Philippine Pension Loan System
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="/dashboard">Dashboard</a>
+                <a class="nav-link" href="/loans">My Loans</a>
+                <a class="nav-link active" href="/apply-loan">Apply Loan</a>
+                <a class="nav-link" href="/profile">Profile</a>
+                <a class="nav-link" href="/logout">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container my-4">
+        <div class="row justify-content-center">
+            <div class="col-md-12">
+                <!-- Step Indicator -->
+                <div class="step-indicator">
+                    <div class="step active">
+                        <div class="step-number">1</div>
+                        <small>Loan Type</small>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">2</div>
+                        <small>Loan Details</small>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">3</div>
+                        <small>Review & Submit</small>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h4 class="mb-0"><i class="bi bi-house-heart"></i> Apply for Pension Loan - GSIS/SSS</h4>
+                    </div>
+                    <div class="card-body">
+                        <% if (typeof error !== 'undefined') { %>
+                            <div class="alert alert-danger"><%= error %></div>
+                        <% } %>
+
+                        <!-- Pension Information Display -->
+                        <div class="pension-info-card p-3 mb-4">
+                            <div class="row align-items-center">
+                                <div class="col-md-8">
+                                    <h6 class="mb-1"><i class="bi bi-person-badge"></i> Pensioner Information</h6>
+                                    <p class="mb-1">Pension Number: <strong><%= user.pension_number || 'Not provided' %></strong></p>
+                                    <p class="mb-0">Monthly Pension: <strong>₱<%= user.monthly_pension ? user.monthly_pension.toLocaleString() : '0' %></strong></p>
+                                </div>
+                                <div class="col-md-4 text-end">
+                                    <span class="badge bg-light text-success">
+                                        <i class="bi bi-check-circle"></i> Eligible for Pension Loans
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <form method="POST" action="/apply-loan" id="loanForm">
+                            <!-- Step 1: Loan Type Selection -->
+                            <div id="step1">
+                                <h5 class="mb-4">Select Loan Type</h5>
+                                <div class="row g-3">
+                                    <!-- Emergency/Calamity Loan -->
+                                    <div class="col-md-4">
+                                        <div class="loan-type-card p-3" onclick="selectLoanType('emergency')">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="loan_type" id="emergency" value="emergency">
+                                                <label class="form-check-label w-100" for="emergency">
+                                                    <div class="text-center mb-2">
+                                                        <i class="bi bi-heart-pulse display-6 text-danger"></i>
+                                                    </div>
+                                                    <h6 class="text-center">Emergency/Calamity Loan</h6>
+                                                    <div class="loan-feature">
+                                                        <span class="badge bg-danger requirement-badge">Fast Processing</span>
+                                                        <ul class="mt-2 small">
+                                                            <li>For medical emergencies</li>
+                                                            <li>Natural calamities</li>
+                                                            <li>Up to 3 months pension</li>
+                                                            <li>6-12 months term</li>
+                                                            <li>6% interest rate</li>
+                                                        </ul>
+                                                    </div>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Pension Loan (Regular) -->
+                                    <div class="col-md-4">
+                                        <div class="loan-type-card p-3" onclick="selectLoanType('regular')">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="loan_type" id="regular" value="regular" checked>
+                                                <label class="form-check-label w-100" for="regular">
+                                                    <div class="text-center mb-2">
+                                                        <i class="bi bi-cash-coin display-6 text-primary"></i>
+                                                    </div>
+                                                    <h6 class="text-center">Regular Pension Loan</h6>
+                                                    <div class="loan-feature">
+                                                        <span class="badge bg-primary requirement-badge">Standard</span>
+                                                        <ul class="mt-2 small">
+                                                            <li>Multi-purpose use</li>
+                                                            <li>Up to 12 months pension</li>
+                                                            <li>12-24 months term</li>
+                                                            <li>8% interest rate</li>
+                                                            <li>No collateral required</li>
+                                                        </ul>
+                                                    </div>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Educational Assistance Loan -->
+                                    <div class="col-md-4">
+                                        <div class="loan-type-card p-3" onclick="selectLoanType('educational')">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="loan_type" id="educational" value="educational">
+                                                <label class="form-check-label w-100" for="educational">
+                                                    <div class="text-center mb-2">
+                                                        <i class="bi bi-book display-6 text-info"></i>
+                                                    </div>
+                                                    <h6 class="text-center">Educational Assistance</h6>
+                                                    <div class="loan-feature">
+                                                        <span class="badge bg-info requirement-badge">Education</span>
+                                                        <ul class="mt-2 small">
+                                                            <li>Tuition fees</li>
+                                                            <li>School expenses</li>
+                                                            <li>Up to 6 months pension</li>
+                                                            <li>Per semester basis</li>
+                                                            <li>7% interest rate</li>
+                                                        </ul>
+                                                    </div>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Housing Loan -->
+                                    <div class="col-md-4">
+                                        <div class="loan-type-card p-3" onclick="selectLoanType('housing')">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="loan_type" id="housing" value="housing">
+                                                <label class="form-check-label w-100" for="housing">
+                                                    <div class="text-center mb-2">
+                                                        <i class="bi bi-house display-6 text-success"></i>
+                                                    </div>
+                                                    <h6 class="text-center">Housing Loan</h6>
+                                                    <div class="loan-feature">
+                                                        <span class="badge bg-success requirement-badge">Long Term</span>
+                                                        <ul class="mt-2 small">
+                                                            <li>Home purchase/repair</li>
+                                                            <li>Up to 24 months pension</li>
+                                                            <li>5-10 years term</li>
+                                                            <li>6% interest rate</li>
+                                                            <li>Property collateral</li>
+                                                        </ul>
+                                                    </div>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Livelihood/Business Loan -->
+                                    <div class="col-md-4">
+                                        <div class="loan-type-card p-3" onclick="selectLoanType('livelihood')">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="loan_type" id="livelihood" value="livelihood">
+                                                <label class="form-check-label w-100" for="livelihood">
+                                                    <div class="text-center mb-2">
+                                                        <i class="bi bi-shop display-6 text-warning"></i>
+                                                    </div>
+                                                    <h6 class="text-center">Livelihood/Business</h6>
+                                                    <div class="loan-feature">
+                                                        <span class="badge bg-warning requirement-badge">Income Generating</span>
+                                                        <ul class="mt-2 small">
+                                                            <li>Small business capital</li>
+                                                            <li>Up to 18 months pension</li>
+                                                            <li>24-36 months term</li>
+                                                            <li>9% interest rate</li>
+                                                            <li>Business plan required</li>
+                                                        </ul>
+                                                    </div>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Restructure/Consolidation Loan -->
+                                    <div class="col-md-4">
+                                        <div class="loan-type-card p-3" onclick="selectLoanType('restructure')">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="loan_type" id="restructure" value="restructure">
+                                                <label class="form-check-label w-100" for="restructure">
+                                                    <div class="text-center mb-2">
+                                                        <i class="bi bi-arrow-repeat display-6 text-secondary"></i>
+                                                    </div>
+                                                    <h6 class="text-center">Loan Restructuring</h6>
+                                                    <div class="loan-feature">
+                                                        <span class="badge bg-secondary requirement-badge">Debt Management</span>
+                                                        <ul class="mt-2 small">
+                                                            <li>Consolidate existing loans</li>
+                                                            <li>Lower monthly payments</li>
+                                                            <li>Extended payment terms</li>
+                                                            <li>8.5% interest rate</li>
+                                                            <li>Existing borrower only</li>
+                                                        </ul>
+                                                    </div>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="mt-4 text-end">
+                                    <button type="button" class="btn btn-primary" onclick="nextStep()">
+                                        Next <i class="bi bi-arrow-right"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Step 2: Loan Details -->
+                            <div id="step2" style="display: none;">
+                                <h5 class="mb-4">Loan Details</h5>
+                                
+                                <!-- Dynamic Loan Limits Based on Type -->
+                                <div class="mb-3">
+                                    <label for="loan_amount" class="form-label fw-bold">Loan Amount (₱)</label>
+                                    <input type="number" class="form-control" id="loan_amount" name="loan_amount" 
+                                           min="1000" step="1000" required
+                                           placeholder="Enter desired loan amount">
+                                    <div class="form-text">
+                                        Maximum allowed: <span id="maxAmountText">₱0</span>
+                                        (<span id="loanMultiplier">0</span> months of your pension)
+                                    </div>
+                                </div>
+
+                                <!-- Loan Duration -->
+                                <div class="mb-3">
+                                    <label for="duration_months" class="form-label fw-bold">Repayment Period</label>
+                                    <select class="form-select" id="duration_months" name="duration_months" required>
+                                        <option value="">Select repayment period</option>
+                                    </select>
+                                    <div class="form-text" id="termDescription">Select loan type first</div>
+                                </div>
+
+                                <!-- Purpose Category -->
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Purpose Category</label>
+                                    <select class="form-select" id="purpose_category" name="purpose_category" required>
+                                        <option value="">Select category</option>
+                                    </select>
+                                </div>
+
+                                <!-- Detailed Purpose -->
+                                <div class="mb-3">
+                                    <label for="purpose" class="form-label fw-bold">Detailed Purpose Description</label>
+                                    <textarea class="form-control" id="purpose" name="purpose" rows="3" 
+                                              placeholder="Please provide specific details about how you plan to use the loan funds..." 
+                                              required></textarea>
+                                </div>
+
+                                <!-- Disbursement Method -->
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Disbursement Method</label>
+                                    <select class="form-select" name="disbursement_method" required>
+                                        <option value="">Select method</option>
+                                        <option value="pension_deduction">Automatic Pension Deduction</option>
+                                        <option value="bank_transfer">Bank Transfer</option>
+                                        <option value="check">Manager's Check</option>
+                                        <option value="over_counter">Over the Counter</option>
+                                    </select>
+                                </div>
+
+                                <!-- Loan Calculator -->
+                                <div class="calculator-section mt-4">
+                                    <h6><i class="bi bi-calculator"></i> Loan Calculator</h6>
+                                    <div class="row align-items-center">
+                                        <div class="col-md-4">
+                                            <label class="form-label text-white">Loan Amount: ₱<span id="amountDisplay">0</span></label>
+                                            <input type="range" class="form-range" id="amount_slider" min="1000" step="1000" value="50000">
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label text-white">Term: <span id="termDisplay">0</span> months</label>
+                                            <input type="range" class="form-range" id="term_slider" min="6" step="6" value="12">
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="calculation-result text-center">
+                                                <small>Monthly Payment:</small>
+                                                <div class="h5 mb-1" id="monthly_payment">₱0</div>
+                                                <small>Total Interest:</small>
+                                                <div id="total_interest">₱0</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="mt-4 d-flex justify-content-between">
+                                    <button type="button" class="btn btn-secondary" onclick="prevStep()">
+                                        <i class="bi bi-arrow-left"></i> Back
+                                    </button>
+                                    <button type="button" class="btn btn-primary" onclick="nextStep()">
+                                        Next <i class="bi bi-arrow-right"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Step 3: Review & Submit -->
+                            <div id="step3" style="display: none;">
+                                <h5 class="mb-4">Review Your Application</h5>
+                                
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="card mb-3">
+                                            <div class="card-header bg-light">
+                                                <h6 class="mb-0">Loan Summary</h6>
+                                            </div>
+                                            <div class="card-body">
+                                                <table class="table table-sm">
+                                                    <tr>
+                                                        <td><strong>Loan Type:</strong></td>
+                                                        <td id="review_type"></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td><strong>Amount:</strong></td>
+                                                        <td id="review_amount"></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td><strong>Term:</strong></td>
+                                                        <td id="review_term"></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td><strong>Purpose:</strong></td>
+                                                        <td id="review_purpose"></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td><strong>Monthly Payment:</strong></td>
+                                                        <td id="review_monthly"></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td><strong>Total Interest:</strong></td>
+                                                        <td id="review_interest"></td>
+                                                    </tr>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="card">
+                                            <div class="card-header bg-light">
+                                                <h6 class="mb-0">Required Documents</h6>
+                                            </div>
+                                            <div class="card-body">
+                                                <div id="requiredDocuments">
+                                                    <!-- Dynamic documents will be inserted here -->
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Terms and Conditions -->
+                                <div class="mb-4">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="terms_agreement" required>
+                                        <label class="form-check-label" for="terms_agreement">
+                                            I certify that all information provided is true and correct. I agree to the terms and conditions of the pension loan.
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="pension_deduction" required>
+                                        <label class="form-check-label" for="pension_deduction">
+                                            I authorize automatic deduction from my monthly pension for loan repayment.
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div class="alert alert-info">
+                                    <h6><i class="bi bi-info-circle"></i> Important Reminders</h6>
+                                    <ul class="mb-0 small">
+                                        <li>Application processing: 3-7 working days</li>
+                                        <li>Ensure all required documents are ready</li>
+                                        <li>Loan approval is subject to verification</li>
+                                        <li>Late payments may affect future loan eligibility</li>
+                                    </ul>
+                                </div>
+
+                                <div class="d-flex justify-content-between">
+                                    <button type="button" class="btn btn-secondary" onclick="prevStep()">
+                                        <i class="bi bi-arrow-left"></i> Back
+                                    </button>
+                                    <button type="submit" class="btn btn-success btn-lg">
+                                        <i class="bi bi-send-check"></i> Submit Application
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Loan type configurations
+        const loanTypes = {
+            emergency: {
+                name: "Emergency/Calamity Loan",
+                maxMultiplier: 3,
+                minTerm: 6,
+                maxTerm: 12,
+                interestRate: 6,
+                purposes: ["Medical Emergency", "Natural Calamity", "Urgent Repairs", "Other Emergency"],
+                documents: ["Valid ID", "Proof of Pension", "Emergency Certificate", "Medical Certificate (if applicable)"]
+            },
+            regular: {
+                name: "Regular Pension Loan",
+                maxMultiplier: 12,
+                minTerm: 12,
+                maxTerm: 24,
+                interestRate: 8,
+                purposes: ["Daily Expenses", "Utility Bills", "Family Needs", "Travel", "Other Personal Use"],
+                documents: ["Valid ID", "Proof of Pension", "Loan Application Form", "Recent Photo"]
+            },
+            educational: {
+                name: "Educational Assistance Loan",
+                maxMultiplier: 6,
+                minTerm: 6,
+                maxTerm: 12,
+                interestRate: 7,
+                purposes: ["Tuition Fees", "School Supplies", "Books & Materials", "Transportation", "Other Education Expenses"],
+                documents: ["Valid ID", "Proof of Pension", "School Registration", "Tuition Fee Assessment"]
+            },
+            housing: {
+                name: "Housing Loan",
+                maxMultiplier: 24,
+                minTerm: 60,
+                maxTerm: 120,
+                interestRate: 6,
+                purposes: ["Home Purchase", "House Repair", "Renovation", "Lot Purchase", "Construction"],
+                documents: ["Valid ID", "Proof of Pension", "Property Title", "Building Plans", "Cost Estimate"]
+            },
+            livelihood: {
+                name: "Livelihood/Business Loan",
+                maxMultiplier: 18,
+                minTerm: 24,
+                maxTerm: 36,
+                interestRate: 9,
+                purposes: ["Business Capital", "Equipment Purchase", "Inventory", "Store Rental", "Business Expansion"],
+                documents: ["Valid ID", "Proof of Pension", "Business Plan", "Barangay Permit", "Market Study"]
+            },
+            restructure: {
+                name: "Loan Restructuring",
+                maxMultiplier: 12,
+                minTerm: 24,
+                maxTerm: 48,
+                interestRate: 8.5,
+                purposes: ["Debt Consolidation", "Payment Relief", "Loan Extension", "Interest Reduction"],
+                documents: ["Valid ID", "Proof of Pension", "Existing Loan Documents", "Payment History"]
+            }
+        };
+
+        let currentStep = 1;
+        let selectedLoanType = 'regular';
+        const monthlyPension = <%= user.monthly_pension || 0 %>;
+
+        function selectLoanType(type) {
+            selectedLoanType = type;
+            document.getElementById(type).checked = true;
+            
+            // Update all card selections
+            document.querySelectorAll('.loan-type-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            event.currentTarget.classList.add('selected');
+            
+            updateLoanDetails();
+        }
+
+        function updateLoanDetails() {
+            const type = loanTypes[selectedLoanType];
+            const maxAmount = monthlyPension * type.maxMultiplier;
+            
+            // Update amount field
+            const amountInput = document.getElementById('loan_amount');
+            amountInput.max = maxAmount;
+            amountInput.value = Math.min(amountInput.value || 0, maxAmount);
+            
+            // Update max amount text
+            document.getElementById('maxAmountText').textContent = '₱' + maxAmount.toLocaleString();
+            document.getElementById('loanMultiplier').textContent = type.maxMultiplier;
+            
+            // Update term options
+            const termSelect = document.getElementById('duration_months');
+            termSelect.innerHTML = '';
+            for (let i = type.minTerm; i <= type.maxTerm; i += 6) {
+                const option = document.createElement('option');
+                option.value = i;
+                option.textContent = i + ' Months';
+                termSelect.appendChild(option);
+            }
+            termSelect.value = type.minTerm;
+            
+            // Update purpose categories
+            const purposeSelect = document.getElementById('purpose_category');
+            purposeSelect.innerHTML = '';
+            type.purposes.forEach(purpose => {
+                const option = document.createElement('option');
+                option.value = purpose.toLowerCase().replace(/ /g, '_');
+                option.textContent = purpose;
+                purposeSelect.appendChild(option);
+            });
+            
+            // Update calculator
+            updateCalculator();
+        }
+
+        function updateCalculator() {
+            const type = loanTypes[selectedLoanType];
+            const amount = parseInt(document.getElementById('amount_slider').value);
+            const term = parseInt(document.getElementById('term_slider').value);
+            
+            const monthlyRate = type.interestRate / 100 / 12;
+            const monthlyPayment = amount * monthlyRate * Math.pow(1 + monthlyRate, term) / 
+                                 (Math.pow(1 + monthlyRate, term) - 1);
+            const totalInterest = (monthlyPayment * term) - amount;
+            
+            document.getElementById('amountDisplay').textContent = amount.toLocaleString();
+            document.getElementById('termDisplay').textContent = term;
+            document.getElementById('monthly_payment').textContent = '₱' + Math.round(monthlyPayment).toLocaleString();
+            document.getElementById('total_interest').textContent = '₱' + Math.round(totalInterest).toLocaleString();
+        }
+
+        function nextStep() {
+            if (currentStep === 1) {
+                if (!document.querySelector('input[name="loan_type"]:checked')) {
+                    alert('Please select a loan type');
+                    return;
+                }
+                document.getElementById('step1').style.display = 'none';
+                document.getElementById('step2').style.display = 'block';
+                updateStepIndicator(2);
+                currentStep = 2;
+            } else if (currentStep === 2) {
+                // Validate step 2
+                if (!document.getElementById('loan_amount').value || 
+                    !document.getElementById('duration_months').value ||
+                    !document.getElementById('purpose_category').value) {
+                    alert('Please fill in all required fields');
+                    return;
+                }
+                updateReviewSection();
+                document.getElementById('step2').style.display = 'none';
+                document.getElementById('step3').style.display = 'block';
+                updateStepIndicator(3);
+                currentStep = 3;
+            }
+        }
+
+        function prevStep() {
+            if (currentStep === 2) {
+                document.getElementById('step2').style.display = 'none';
+                document.getElementById('step1').style.display = 'block';
+                updateStepIndicator(1);
+                currentStep = 1;
+            } else if (currentStep === 3) {
+                document.getElementById('step3').style.display = 'none';
+                document.getElementById('step2').style.display = 'block';
+                updateStepIndicator(2);
+                currentStep = 2;
+            }
+        }
+
+        function updateStepIndicator(step) {
+            document.querySelectorAll('.step').forEach((s, index) => {
+                s.classList.remove('active', 'completed');
+                if (index + 1 < step) {
+                    s.classList.add('completed');
+                } else if (index + 1 === step) {
+                    s.classList.add('active');
+                }
+            });
+        }
+
+        function updateReviewSection() {
+            const type = loanTypes[selectedLoanType];
+            const amount = document.getElementById('loan_amount').value;
+            const term = document.getElementById('duration_months').value;
+            const purpose = document.getElementById('purpose_category').options[document.getElementById('purpose_category').selectedIndex].text;
+            
+            // Calculate payment details
+            const monthlyRate = type.interestRate / 100 / 12;
+            const monthlyPayment = amount * monthlyRate * Math.pow(1 + monthlyRate, term) / 
+                                 (Math.pow(1 + monthlyRate, term) - 1);
+            const totalInterest = (monthlyPayment * term) - amount;
+            
+            // Update review section
+            document.getElementById('review_type').textContent = type.name;
+            document.getElementById('review_amount').textContent = '₱' + parseInt(amount).toLocaleString();
+            document.getElementById('review_term').textContent = term + ' months';
+            document.getElementById('review_purpose').textContent = purpose;
+            document.getElementById('review_monthly').textContent = '₱' + Math.round(monthlyPayment).toLocaleString();
+            document.getElementById('review_interest').textContent = '₱' + Math.round(totalInterest).toLocaleString();
+            
+            // Update required documents
+            const docsContainer = document.getElementById('requiredDocuments');
+            docsContainer.innerHTML = '';
+            type.documents.forEach(doc => {
+                const div = document.createElement('div');
+                div.className = 'form-check';
+                div.innerHTML = `
+                    <input class="form-check-input" type="checkbox" required>
+                    <label class="form-check-label small">${doc}</label>
+                `;
+                docsContainer.appendChild(div);
+            });
+        }
+
+        // Event Listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize
+            updateLoanDetails();
+            
+            // Amount slider
+            document.getElementById('amount_slider').addEventListener('input', function() {
+                document.getElementById('loan_amount').value = this.value;
+                updateCalculator();
+            });
+            
+            // Term slider
+            document.getElementById('term_slider').addEventListener('input', function() {
+                document.getElementById('duration_months').value = this.value;
+                updateCalculator();
+            });
+            
+            // Manual amount input
+            document.getElementById('loan_amount').addEventListener('input', function() {
+                const max = parseInt(this.max);
+                const value = parseInt(this.value) || 0;
+                document.getElementById('amount_slider').value = Math.min(value, max);
+                updateCalculator();
+            });
+            
+            // Manual term selection
+            document.getElementById('duration_months').addEventListener('change', function() {
+                document.getElementById('term_slider').value = this.value;
+                updateCalculator();
+            });
+        });
+
+        // Form validation
+        document.getElementById('loanForm').addEventListener('submit', function(e) {
+            const amount = parseInt(document.getElementById('loan_amount').value);
+            const maxAmount = monthlyPension * loanTypes[selectedLoanType].maxMultiplier;
+            
+            if (amount > maxAmount) {
+                e.preventDefault();
+                alert('Loan amount cannot exceed your maximum eligible amount of ₱' + maxAmount.toLocaleString());
+                return false;
+            }
+            
+            if (!document.getElementById('terms_agreement').checked || 
+                !document.getElementById('pension_deduction').checked) {
+                e.preventDefault();
+                alert('Please agree to all terms and conditions');
+                return false;
+            }
+        });
+    </script>
+</body>
+</html>

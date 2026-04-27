@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        .stat-card {
+            border-radius: 15px;
+            border: none;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            overflow: hidden;
+        }
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        .quick-action-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            border: 1px solid #e9ecef;
+            transition: all 0.3s ease;
+            height: 100%;
+        }
+        .quick-action-card:hover {
+            border-color: #007bff;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .action-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            font-size: 24px;
+            color: white;
+        }
+        .icon-primary { background: linear-gradient(135deg, #007bff 0%, #0056b3 100%); }
+        .icon-success { background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%); }
+        .icon-warning { background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%); }
+        .icon-info { background: linear-gradient(135deg, #17a2b8 0%, #138496 100%); }
+        .icon-purple { background: linear-gradient(135deg, #6f42c1 0%, #5a2d9c 100%); }
+        .icon-teal { background: linear-gradient(135deg, #20c997 0%, #1a9e7a 100%); }
+        .icon-orange { background: linear-gradient(135deg, #fd7e14 0%, #e55a00 100%); }
+        .team-performance-table th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+        }
+        .performance-badge {
+            font-size: 0.75rem;
+        }
+        .welcome-banner {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 25px;
+        }
+        .activity-item {
+            border-left: 3px solid #007bff;
+            padding-left: 15px;
+            margin-bottom: 15px;
+        }
+        .activity-item.success { border-left-color: #28a745; }
+        .activity-item.warning { border-left-color: #ffc107; }
+        .activity-item.info { border-left-color: #17a2b8; }
+        .activity-item.teal { border-left-color: #20c997; }
+        .activity-item.orange { border-left-color: #fd7e14; }
+        .empty-state {
+            padding: 2rem 1rem;
+            text-align: center;
+            color: #6c757d;
+        }
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+        .btn-purple {
+            background: #6f42c1;
+            border-color: #6f42c1;
+            color: white;
+        }
+        .btn-teal {
+            background: #20c997;
+            border-color: #20c997;
+            color: white;
+        }
+        .btn-orange {
+            background: #fd7e14;
+            border-color: #fd7e14;
+            color: white;
+        }
+        .withdrawal-stats {
+            background: linear-gradient(135deg, #20c997 0%, #1a9e7a 100%);
+            color: white;
+        }
+        .posting-stats {
+            background: linear-gradient(135deg, #fd7e14 0%, #e55a00 100%);
+            color: white;
+        }
+        .payment-stats {
+            background: linear-gradient(135deg, #6f42c1 0%, #5a2d9c 100%);
+            color: white;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/dashboard">
+                <i class="bi bi-cash-coin me-2"></i> Millenium Cash
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link active" href="/dashboard">Dashboard</a>
+                <a class="nav-link" href="/loans">Loan Applications</a>
+                <a class="nav-link" href="/employee/payments">Payment Posting</a>
+                <a class="nav-link" href="/employee/pension-withdrawals">Pension Withdrawals</a>
+                <a class="nav-link" href="/employee/collection-postings">Collection Postings</a>
+                <a class="nav-link" href="/manager/team">Team Management</a>
+                <a class="nav-link" href="/manager/reports">Reports</a>
+                <a class="nav-link" href="/manager/analytics">Analytics</a>
+                <a class="nav-link" href="/profile">Profile</a>
+                <a class="nav-link" href="/logout">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container my-4">
+        <!-- Welcome Banner -->
+        <div class="welcome-banner mb-4">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h2 class="mb-2">Welcome back, <strong><%= user.full_name %></strong>! 👋</h2>
+                    <p class="mb-0 opacity-75">
+                        <i class="bi bi-calendar-check me-1"></i>
+                        <%= new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) %>
+                    </p>
+                </div>
+                <div class="col-md-4 text-end">
+                    <div class="bg-white bg-opacity-10 p-3 rounded">
+                        <small class="d-block">Manager ID</small>
+                        <strong class="fs-5">MGR-<%= user.user_id.toString().padStart(4, '0') %></strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics Cards - ENHANCED WITH OPERATIONAL STATS -->
+        <div class="row mb-4">
+            <div class="col-xl-2 col-md-4 mb-3">
+                <div class="card stat-card bg-primary text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h4 class="mb-0"><%= stats.team_members || 0 %></h4>
+                                <p class="mb-0 fw-light small">Team Members</p>
+                            </div>
+                            <i class="bi bi-people-fill opacity-50"></i>
+                        </div>
+                        <div class="mt-2">
+                            <small class="opacity-75">
+                                Active employees
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-2 col-md-4 mb-3">
+                <div class="card stat-card bg-warning text-dark">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h4 class="mb-0"><%= stats.pending_loans || 0 %></h4>
+                                <p class="mb-0 fw-light small">Pending Loans</p>
+                            </div>
+                            <i class="bi bi-clock-history opacity-50"></i>
+                        </div>
+                        <div class="mt-2">
+                            <small class="opacity-75">
+                                Awaiting review
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-2 col-md-4 mb-3">
+                <div class="card stat-card bg-success text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h4 class="mb-0"><%= stats.approved_loans || 0 %></h4>
+                                <p class="mb-0 fw-light small">Approved Loans</p>
+                            </div>
+                            <i class="bi bi-check-circle opacity-50"></i>
+                        </div>
+                        <div class="mt-2">
+                            <small class="opacity-75">
+                                This month
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-2 col-md-4 mb-3">
+                <div class="card stat-card payment-stats">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h4 class="mb-0"><%= stats.total_payments || 0 %></h4>
+                                <p class="mb-0 fw-light small">Payments</p>
+                            </div>
+                            <i class="bi bi-credit-card opacity-50"></i>
+                        </div>
+                        <div class="mt-2">
+                            <small class="opacity-75">
+                                Loan payments
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-2 col-md-4 mb-3">
+                <div class="card stat-card withdrawal-stats">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h4 class="mb-0"><%= stats.total_withdrawals || 0 %></h4>
+                                <p class="mb-0 fw-light small">Withdrawals</p>
+                            </div>
+                            <i class="bi bi-cash-coin opacity-50"></i>
+                        </div>
+                        <div class="mt-2">
+                            <small class="opacity-75">
+                                Pension withdrawals
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-2 col-md-4 mb-3">
+                <div class="card stat-card posting-stats">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h4 class="mb-0"><%= stats.total_postings || 0 %></h4>
+                                <p class="mb-0 fw-light small">Collections</p>
+                            </div>
+                            <i class="bi bi-journal-check opacity-50"></i>
+                        </div>
+                        <div class="mt-2">
+                            <small class="opacity-75">
+                                Posted collections
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions & Team Performance -->
+        <div class="row mb-4">
+            <!-- Quick Actions - ENHANCED WITH OPERATIONAL FEATURES -->
+            <div class="col-lg-8 mb-4">
+                <div class="card h-100">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0"><i class="bi bi-lightning-fill me-2 text-warning"></i>Quick Actions</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <!-- Loan Management -->
+                            <div class="col-md-6">
+                                <div class="quick-action-card">
+                                    <div class="action-icon icon-primary">
+                                        <i class="bi bi-clipboard-check"></i>
+                                    </div>
+                                    <h6 class="fw-bold">Review Loans</h6>
+                                    <p class="text-muted small mb-3">Approve or reject pending loan applications</p>
+                                    <a href="/loans?status=pending" class="btn btn-primary btn-sm w-100">
+                                        Review Now
+                                    </a>
+                                </div>
+                            </div>
+                            
+                            <!-- Payment Posting -->
+                            <div class="col-md-6">
+                                <div class="quick-action-card">
+                                    <div class="action-icon icon-purple">
+                                        <i class="bi bi-credit-card"></i>
+                                    </div>
+                                    <h6 class="fw-bold">Post Payments</h6>
+                                    <p class="text-muted small mb-3">Record loan payments from customers</p>
+                                    <a href="/employee/payments" class="btn btn-purple btn-sm w-100">
+                                        Post Payments
+                                    </a>
+                                </div>
+                            </div>
+
+                            <!-- Pension Withdrawals -->
+                            <div class="col-md-6">
+                                <div class="quick-action-card">
+                                    <div class="action-icon icon-teal">
+                                        <i class="bi bi-cash-coin"></i>
+                                    </div>
+                                    <h6 class="fw-bold">Pension Withdrawals</h6>
+                                    <p class="text-muted small mb-3">Process pension payment withdrawals</p>
+                                    <a href="/employee/pension-withdrawals" class="btn btn-teal btn-sm w-100">
+                                        View Withdrawals
+                                    </a>
+                                </div>
+                            </div>
+
+                            <!-- Collection Postings -->
+                            <div class="col-md-6">
+                                <div class="quick-action-card">
+                                    <div class="action-icon icon-orange">
+                                        <i class="bi bi-journal-check"></i>
+                                    </div>
+                                    <h6 class="fw-bold">Collection Postings</h6>
+                                    <p class="text-muted small mb-3">Post collections to bank or change fund</p>
+                                    <a href="/employee/collection-postings" class="btn btn-orange btn-sm w-100">
+                                        View Collections
+                                    </a>
+                                </div>
+                            </div>
+
+                            <!-- Team Management -->
+                            <div class="col-md-6">
+                                <div class="quick-action-card">
+                                    <div class="action-icon icon-warning">
+                                        <i class="bi bi-people"></i>
+                                    </div>
+                                    <h6 class="fw-bold">Team Management</h6>
+                                    <p class="text-muted small mb-3">Manage your team members</p>
+                                    <a href="/manager/team" class="btn btn-warning btn-sm w-100">
+                                        Manage Team
+                                    </a>
+                                </div>
+                            </div>
+
+                            <!-- Analytics -->
+                            <div class="col-md-6">
+                                <div class="quick-action-card">
+                                    <div class="action-icon icon-success">
+                                        <i class="bi bi-bar-chart"></i>
+                                    </div>
+                                    <h6 class="fw-bold">Analytics</h6>
+                                    <p class="text-muted small mb-3">Detailed performance analytics</p>
+                                    <a href="/manager/analytics" class="btn btn-success btn-sm w-100">
+                                        View Analytics
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Team Performance -->
+            <div class="col-lg-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="bi bi-trophy me-2 text-success"></i>Team Performance</h5>
+                        <a href="/manager/team" class="btn btn-sm btn-outline-primary">View All</a>
+                    </div>
+                    <div class="card-body">
+                        <% if (teamPerformance && teamPerformance.length > 0) { %>
+                            <div class="table-responsive">
+                                <table class="table table-sm team-performance-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Employee</th>
+                                            <th>Loans</th>
+                                            <th>Approved</th>
+                                            <th>Performance</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <% teamPerformance.forEach(function(employee) { 
+                                            const approvalRate = employee.loans_processed > 0 ? 
+                                                ((employee.approved_count || 0) / employee.loans_processed * 100) : 0;
+                                            const performanceLevel = approvalRate >= 80 ? 'success' : 
+                                                                   approvalRate >= 60 ? 'warning' : 'danger';
+                                        %>
+                                        <tr>
+                                            <td>
+                                                <div class="fw-bold text-truncate" style="max-width: 120px;">
+                                                    <%= employee.full_name %>
+                                                </div>
+                                                <small class="text-muted"><%= employee.email %></small>
+                                            </td>
+                                            <td class="fw-bold"><%= employee.loans_processed || 0 %></td>
+                                            <td>
+                                                <span class="badge bg-success performance-badge">
+                                                    <%= employee.approved_count || 0 %>
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <div class="flex-grow-1 me-2">
+                                                        <div class="progress" style="height: 6px;">
+                                                            <div class="progress-bar bg-<%= performanceLevel %>" 
+                                                                 style="width: <%= approvalRate %>%"
+                                                                 data-bs-toggle="tooltip" 
+                                                                 title="<%= Math.round(approvalRate) %>% Approval Rate">
+                                                            </div>
+                                                        </div>
+                                                        <small class="text-muted"><%= Math.round(approvalRate) %>%</small>
+                                                    </div>
+                                                    <span class="badge bg-<%= performanceLevel %> performance-badge">
+                                                        <i class="bi bi-<%= 
+                                                            performanceLevel === 'success' ? 'star-fill' :
+                                                            performanceLevel === 'warning' ? 'star-half' : 'star'
+                                                        %>"></i>
+                                                    </span>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <% }); %>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <% } else { %>
+                            <div class="empty-state">
+                                <i class="bi bi-people"></i>
+                                <p class="mb-0">No team performance data available</p>
+                                <small class="text-muted">Team members will appear here once they start processing loans</small>
+                            </div>
+                        <% } %>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Activity & Quick Stats -->
+        <div class="row">
+            <!-- Recent Activity - ENHANCED WITH OPERATIONAL ACTIVITIES -->
+            <div class="col-lg-8 mb-4">
+                <div class="card h-100">
+                    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="bi bi-activity me-2 text-primary"></i>Recent Team Activity</h5>
+                        <span class="badge bg-primary"><%= recentActivities ? recentActivities.length : 0 %></span>
+                    </div>
+                    <div class="card-body">
+                        <% if (recentActivities && recentActivities.length > 0) { %>
+                            <div style="max-height: 400px; overflow-y: auto;">
+                                <% recentActivities.forEach(function(activity) { 
+                                    let activityClass = 'primary';
+                                    let icon = 'bi-activity';
+                                    
+                                    if (activity.action) {
+                                        if (activity.action.includes('APPROVE') || activity.action.includes('REJECT')) {
+                                            activityClass = 'success';
+                                            icon = 'bi-clipboard-check';
+                                        } else if (activity.action.includes('CREATE_LOAN')) {
+                                            activityClass = 'info';
+                                            icon = 'bi-plus-circle';
+                                        } else if (activity.action.includes('CREATE_CUSTOMER')) {
+                                            activityClass = 'primary';
+                                            icon = 'bi-person-plus';
+                                        } else if (activity.action.includes('WITHDRAWAL')) {
+                                            activityClass = 'teal';
+                                            icon = 'bi-cash-coin';
+                                        } else if (activity.action.includes('POSTING') || activity.action.includes('PAYMENT')) {
+                                            activityClass = 'orange';
+                                            icon = 'bi-credit-card';
+                                        } else {
+                                            activityClass = 'warning';
+                                            icon = 'bi-clock';
+                                        }
+                                    }
+                                %>
+                                <div class="activity-item <%= activityClass %>">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div class="flex-grow-1">
+                                            <h6 class="mb-1">
+                                                <i class="bi <%= icon %> me-1"></i>
+                                                <%= activity.action ? activity.action.replace(/_/g, ' ') : 'Activity' %>
+                                            </h6>
+                                            <p class="mb-1 small text-muted">
+                                                <%= activity.description || 'No description' %>
+                                            </p>
+                                            <small class="text-muted">
+                                                <i class="bi bi-person me-1"></i><%= activity.full_name || 'System' %>
+                                            </small>
+                                        </div>
+                                        <div class="text-end">
+                                            <small class="text-muted d-block">
+                                                <%= new Date(activity.created_at).toLocaleDateString() %>
+                                            </small>
+                                            <small class="text-muted">
+                                                <%= new Date(activity.created_at).toLocaleTimeString() %>
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <% }); %>
+                            </div>
+                        <% } else { %>
+                            <div class="empty-state">
+                                <i class="bi bi-inbox"></i>
+                                <p class="mb-0">No recent team activity</p>
+                                <small class="text-muted">Activities will appear here as your team works</small>
+                            </div>
+                        <% } %>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Stats - ENHANCED WITH OPERATIONAL DATA -->
+            <div class="col-lg-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0"><i class="bi bi-speedometer2 me-2 text-info"></i>Quick Stats</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <small class="text-muted d-block">Team Size</small>
+                            <h4 class="text-primary"><%= stats.team_members || 0 %> Members</h4>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <small class="text-muted d-block">Operational Metrics</small>
+                            <div class="d-flex justify-content-between small mb-1">
+                                <span>Pending Loans:</span>
+                                <span class="fw-bold"><%= stats.pending_loans || 0 %></span>
+                            </div>
+                            <div class="d-flex justify-content-between small mb-1">
+                                <span>Payments Today:</span>
+                                <span class="fw-bold text-purple"><%= stats.today_payments || 0 %></span>
+                            </div>
+                            <div class="d-flex justify-content-between small mb-1">
+                                <span>Withdrawals:</span>
+                                <span class="fw-bold text-teal"><%= stats.total_withdrawals || 0 %></span>
+                            </div>
+                            <div class="d-flex justify-content-between small">
+                                <span>Collections:</span>
+                                <span class="fw-bold text-orange"><%= stats.total_postings || 0 %></span>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <small class="text-muted d-block">Financial Overview</small>
+                            <div class="d-flex justify-content-between small mb-1">
+                                <span>Total Processed:</span>
+                                <span class="fw-bold text-success">₱<%= (stats.total_processed || 0).toLocaleString() %></span>
+                            </div>
+                            <div class="d-flex justify-content-between small">
+                                <span>Change Fund:</span>
+                                <span class="fw-bold text-info">₱<%= (stats.change_fund_balance || 0).toLocaleString() %></span>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-4 p-3 bg-light rounded">
+                            <small class="text-muted d-block">Performance Summary</small>
+                            <div class="d-flex justify-content-between align-items-center mt-2">
+                                <span>Team Efficiency:</span>
+                                <span class="badge bg-success">
+                                    <% 
+                                        const totalLoans = (stats.pending_loans || 0) + (stats.approved_loans || 0);
+                                        const efficiency = totalLoans > 0 ? Math.round((stats.approved_loans || 0) / totalLoans * 100) : 0;
+                                    %>
+                                    <%= efficiency %>%
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Auto-refresh dashboard every 5 minutes
+        setInterval(function() {
+            if (!document.querySelector('.modal.show')) {
+                window.location.reload();
+            }
+        }, 300000);
+
+        // Initialize tooltips
+        document.addEventListener('DOMContentLoaded', function() {
+            const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            const tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+        });
+
+        // Performance chart data (for future implementation)
+        const performanceData = {
+            teamMembers: <%= stats.team_members || 0 %>,
+            pendingLoans: <%= stats.pending_loans || 0 %>,
+            approvedLoans: <%= stats.approved_loans || 0 %>,
+            totalPayments: <%= stats.total_payments || 0 %>,
+            totalWithdrawals: <%= stats.total_withdrawals || 0 %>,
+            totalPostings: <%= stats.total_postings || 0 %>
+        };
+
+        console.log('Manager dashboard loaded with operational data:', performanceData);
+    </script>
+</body>
+</html>

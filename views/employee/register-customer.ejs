@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        .form-section {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-left: 4px solid #007bff;
+        }
+        .form-section h6 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+        }
+        .required-field::after {
+            content: " *";
+            color: #dc3545;
+        }
+        .progress-bar-custom {
+            height: 5px;
+        }
+        .document-checklist {
+            background: #e8f4fd;
+            border-radius: 8px;
+            padding: 15px;
+        }
+        .form-step {
+            display: none;
+        }
+        .form-step.active {
+            display: block;
+        }
+        .summary-card {
+            border-left: 4px solid #28a745;
+            background: #f8fff9;
+        }
+        .file-upload-preview {
+            max-width: 200px;
+            max-height: 150px;
+            margin-top: 5px;
+            display: none;
+        }
+        .beneficiary-entry {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border: 1px solid #dee2e6;
+        }
+        .success-alert {
+            border-left: 4px solid #28a745;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/dashboard">
+                <i class="bi bi-cash-coin"></i> Millenium Cash
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="/dashboard">Dashboard</a>
+                <a class="nav-link" href="/employee/customers">Customers</a>
+                <a class="nav-link" href="/loans">Loan Applications</a>
+                <a class="nav-link active" href="/employee/register-customer">Register Customer</a>
+                <a class="nav-link" href="/profile">Profile</a>
+                <a class="nav-link" href="/logout">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container my-4">
+        <div class="row justify-content-center">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h4 class="mb-0"><i class="bi bi-person-plus"></i> Register New Pensioner Customer</h4>
+                        <p class="mb-0 mt-2 small opacity-75">Complete all required information for pension loan eligibility</p>
+                    </div>
+                    <div class="card-body">
+                        <!-- Progress Bar -->
+                        <div class="mb-4">
+                            <div class="d-flex justify-content-between mb-2">
+                                <small>Step <span id="currentStep">1</span> of 4</small>
+                                <small><span id="progressPercent">25%</span> Complete</small>
+                            </div>
+                            <div class="progress progress-bar-custom">
+                                <div class="progress-bar" id="progressBar" style="width: 25%"></div>
+                            </div>
+                        </div>
+
+                        <% if (typeof error !== 'undefined' && error) { %>
+                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                <i class="bi bi-exclamation-triangle"></i> <%= error %>
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        <% } %>
+                        <% if (typeof success !== 'undefined' && success) { %>
+                            <div class="alert alert-success alert-dismissible fade show success-alert" role="alert">
+                                <i class="bi bi-check-circle"></i> <%= success %>
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        <% } %>
+
+                        <form method="POST" action="/employee/register-customer" id="customerForm" enctype="multipart/form-data" novalidate>
+                            <!-- Step 1: Basic Information -->
+                            <div class="form-step active" id="step1">
+                                <div class="form-section">
+                                    <h6><i class="bi bi-person-vcard"></i> Personal Information</h6>
+                                    <div class="row">
+                                        <div class="col-md-4 mb-3">
+                                            <label class="form-label required-field">Last Name</label>
+                                            <input type="text" class="form-control" name="last_name" required>
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label class="form-label required-field">First Name</label>
+                                            <input type="text" class="form-control" name="first_name" required>
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label class="form-label">Middle Name</label>
+                                            <input type="text" class="form-control" name="middle_name">
+                                        </div>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-md-3 mb-3">
+                                            <label class="form-label">Suffix</label>
+                                            <select class="form-select" name="suffix">
+                                                <option value="">None</option>
+                                                <option value="Jr">Jr</option>
+                                                <option value="Sr">Sr</option>
+                                                <option value="II">II</option>
+                                                <option value="III">III</option>
+                                                <option value="IV">IV</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-3 mb-3">
+                                            <label class="form-label required-field">Gender</label>
+                                            <select class="form-select" name="gender" required>
+                                                <option value="">Select</option>
+                                                <option value="Male">Male</option>
+                                                <option value="Female">Female</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-3 mb-3">
+                                            <label class="form-label required-field">Civil Status</label>
+                                            <select class="form-select" name="civil_status" required>
+                                                <option value="">Select</option>
+                                                <option value="Single">Single</option>
+                                                <option value="Married">Married</option>
+                                                <option value="Widowed">Widowed</option>
+                                                <option value="Separated">Separated</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-3 mb-3">
+                                            <label class="form-label required-field">Date of Birth</label>
+                                            <input type="date" class="form-control" name="date_of_birth" required max="<%= new Date().toISOString().split('T')[0] %>">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="form-section">
+                                    <h6><i class="bi bi-telephone"></i> Contact Information</h6>
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label required-field">Mobile Number</label>
+                                            <input type="tel" class="form-control" name="mobile_number" placeholder="09123456789" required>
+                                            <div class="form-text">Format: 09123456789 (11 digits starting with 09)</div>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Telephone Number</label>
+                                            <input type="tel" class="form-control" name="telephone_number">
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label required-field">Email Address</label>
+                                        <input type="email" class="form-control" name="email" required>
+                                    </div>
+                                </div>
+
+                                <div class="text-end">
+                                    <button type="button" class="btn btn-primary" onclick="nextStep(2)">
+                                        Next <i class="bi bi-arrow-right"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Step 2: Address & Pension Details -->
+                            <div class="form-step" id="step2">
+                                <div class="form-section">
+                                    <h6><i class="bi bi-geo-alt"></i> Address Information</h6>
+                                    <div class="row">
+                                        <div class="col-md-12 mb-3">
+                                            <label class="form-label required-field">House No. & Street</label>
+                                            <input type="text" class="form-control" name="street_address" required>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-4 mb-3">
+                                            <label class="form-label required-field">Barangay</label>
+                                            <input type="text" class="form-control" name="barangay" required>
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label class="form-label required-field">City/Municipality</label>
+                                            <input type="text" class="form-control" name="city" required>
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label class="form-label required-field">Province</label>
+                                            <input type="text" class="form-control" name="province" required>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label required-field">Region</label>
+                                            <select class="form-select" name="region" required>
+                                                <option value="">Select Region</option>
+                                                <option value="NCR">National Capital Region (NCR)</option>
+                                                <option value="Region I">Region I - Ilocos Region</option>
+                                                <option value="Region II">Region II - Cagayan Valley</option>
+                                                <option value="Region III">Region III - Central Luzon</option>
+                                                <option value="Region IV-A">Region IV-A - CALABARZON</option>
+                                                <option value="Region V">Region V - Bicol Region</option>
+                                                <option value="Region VI">Region VI - Western Visayas</option>
+                                                <option value="Region VII">Region VII - Central Visayas</option>
+                                                <option value="Region VIII">Region VIII - Eastern Visayas</option>
+                                                <option value="Region IX">Region IX - Zamboanga Peninsula</option>
+                                                <option value="Region X">Region X - Northern Mindanao</option>
+                                                <option value="Region XI">Region XI - Davao Region</option>
+                                                <option value="Region XII">Region XII - SOCCSKSARGEN</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label required-field">ZIP Code</label>
+                                            <input type="text" class="form-control" name="zip_code" required>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="form-section">
+                                    <h6><i class="bi bi-cash-coin"></i> Pension Information</h6>
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label required-field">Pension System</label>
+                                            <select class="form-select" name="pension_system" required>
+                                                <option value="">Select</option>
+                                                <option value="GSIS">GSIS (Government Service Insurance System)</option>
+                                                <option value="SSS">SSS (Social Security System)</option>
+                                                <option value="AFPSLAI">AFPSLAI (Armed Forces)</option>
+                                                <option value="Other">Other Pension System</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label required-field">Pension Number</label>
+                                            <input type="text" class="form-control" name="pension_number" required>
+                                            <div class="form-text">GSIS/SSS BP Number or Pension ID</div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label required-field">Monthly Pension (₱)</label>
+                                            <input type="number" class="form-control" name="monthly_pension" min="1000" step="100" required>
+                                            <div class="form-text">Gross monthly pension amount</div>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Pension Start Date</label>
+                                            <input type="date" class="form-control" name="pension_start_date">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="d-flex justify-content-between">
+                                    <button type="button" class="btn btn-secondary" onclick="prevStep(1)">
+                                        <i class="bi bi-arrow-left"></i> Back
+                                    </button>
+                                    <button type="button" class="btn btn-primary" onclick="nextStep(3)">
+                                        Next <i class="bi bi-arrow-right"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Step 3: Employment & Beneficiaries -->
+                            <div class="form-step" id="step3">
+                                <div class="form-section">
+                                    <h6><i class="bi bi-briefcase"></i> Employment Background (Optional)</h6>
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Last Employer</label>
+                                            <input type="text" class="form-control" name="last_employer">
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Position</label>
+                                            <input type="text" class="form-control" name="last_position">
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Years of Service</label>
+                                            <input type="number" class="form-control" name="years_of_service" min="0" max="60">
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Retirement Date</label>
+                                            <input type="date" class="form-control" name="retirement_date">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="form-section">
+                                    <h6><i class="bi bi-people"></i> Beneficiary Information (Optional)</h6>
+                                    <div class="alert alert-info">
+                                        <small><i class="bi bi-info-circle"></i> Add beneficiaries who will receive pension benefits in case of unforeseen circumstances.</small>
+                                    </div>
+                                    <div id="beneficiaries">
+                                        <div class="beneficiary-entry">
+                                            <div class="row">
+                                                <div class="col-md-4 mb-2">
+                                                    <label class="form-label">Full Name</label>
+                                                    <input type="text" class="form-control" name="beneficiary_name[]">
+                                                </div>
+                                                <div class="col-md-3 mb-2">
+                                                    <label class="form-label">Relationship</label>
+                                                    <select class="form-select" name="beneficiary_relationship[]">
+                                                        <option value="">Select</option>
+                                                        <option value="Spouse">Spouse</option>
+                                                        <option value="Child">Child</option>
+                                                        <option value="Parent">Parent</option>
+                                                        <option value="Sibling">Sibling</option>
+                                                        <option value="Other">Other</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-3 mb-2">
+                                                    <label class="form-label">Birthdate</label>
+                                                    <input type="date" class="form-control" name="beneficiary_birthdate[]">
+                                                </div>
+                                                <div class="col-md-2 mb-2">
+                                                    <label class="form-label">Percentage</label>
+                                                    <div class="input-group">
+                                                        <input type="number" class="form-control" name="beneficiary_percentage[]" min="0" max="100" placeholder="%">
+                                                        <button type="button" class="btn btn-outline-danger" onclick="removeBeneficiary(this)">
+                                                            <i class="bi bi-trash"></i>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="addBeneficiary()">
+                                        <i class="bi bi-plus-circle"></i> Add Beneficiary
+                                    </button>
+                                </div>
+
+                                <div class="d-flex justify-content-between">
+                                    <button type="button" class="btn btn-secondary" onclick="prevStep(2)">
+                                        <i class="bi bi-arrow-left"></i> Back
+                                    </button>
+                                    <button type="button" class="btn btn-primary" onclick="nextStep(4)">
+                                        Next <i class="bi bi-arrow-right"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Step 4: Documents & Review -->
+                            <div class="form-step" id="step4">
+                                <div class="form-section">
+                                    <h6><i class="bi bi-files"></i> Required Documents Upload</h6>
+                                    <div class="alert alert-warning">
+                                        <small><i class="bi bi-info-circle"></i> All documents must be clear and readable. Maximum file size: 10MB each. Accepted formats: JPG, PNG, PDF, DOC, DOCX</small>
+                                    </div>
+                                    
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label required-field">Aim Passbook</label>
+                                            <input type="file" class="form-control" name="aim_passbook" accept=".jpg,.jpeg,.png,.pdf,.doc,.docx" required onchange="previewFile(this, 'aimPassbookPreview')">
+                                            <img id="aimPassbookPreview" class="file-upload-preview img-thumbnail">
+                                            <div class="form-text">Clear photo or scan of passbook</div>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label required-field">Bank Statement</label>
+                                            <input type="file" class="form-control" name="bank_statement" accept=".jpg,.jpeg,.png,.pdf,.doc,.docx" required onchange="previewFile(this, 'bankStatementPreview')">
+                                            <img id="bankStatementPreview" class="file-upload-preview img-thumbnail">
+                                            <div class="form-text">Latest 3 months bank statement</div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label required-field">Proof of Billing</label>
+                                            <input type="file" class="form-control" name="proof_of_billing" accept=".jpg,.jpeg,.png,.pdf,.doc,.docx" required onchange="previewFile(this, 'billingPreview')">
+                                            <img id="billingPreview" class="file-upload-preview img-thumbnail">
+                                            <div class="form-text">Utility bill (electricity, water, etc.)</div>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label required-field">Barangay Clearance</label>
+                                            <input type="file" class="form-control" name="brgy_clearance" accept=".jpg,.jpeg,.png,.pdf,.doc,.docx" required onchange="previewFile(this, 'brgyPreview')">
+                                            <img id="brgyPreview" class="file-upload-preview img-thumbnail">
+                                            <div class="form-text">Recent barangay clearance</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="alert alert-info">
+                                    <h6><i class="bi bi-check-circle"></i> Review Customer Information</h6>
+                                    <p class="mb-0">Please verify all information before submitting the registration.</p>
+                                </div>
+
+                                <div class="summary-card p-3 mb-4">
+                                    <h6>Registration Summary</h6>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <strong>Personal Info:</strong>
+                                            <div id="summaryPersonal" class="mt-2"></div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <strong>Contact & Pension:</strong>
+                                            <div id="summaryContact" class="mt-2"></div>
+                                        </div>
+                                    </div>
+                                    <div class="row mt-3">
+                                        <div class="col-md-12">
+                                            <strong>Address:</strong>
+                                            <div id="summaryAddress" class="mt-2"></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="document-checklist mb-4">
+                                    <h6><i class="bi bi-clipboard-check"></i> Required Documents Checklist</h6>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="doc1" required>
+                                        <label class="form-check-label" for="doc1">Aim Passbook (Uploaded)</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="doc2" required>
+                                        <label class="form-check-label" for="doc2">Bank Statement (Uploaded)</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="doc3" required>
+                                        <label class="form-check-label" for="doc3">Proof of Billing (Uploaded)</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="doc4" required>
+                                        <label class="form-check-label" for="doc4">Barangay Clearance (Uploaded)</label>
+                                    </div>
+                                </div>
+
+                                <div class="mb-4">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="privacy_agreement" required>
+                                        <label class="form-check-label" for="privacy_agreement">
+                                            I confirm that the customer has provided consent for data processing under Data Privacy Act
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="verification_agreement" required>
+                                        <label class="form-check-label" for="verification_agreement">
+                                            I verify that all information provided is accurate and documents have been checked
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div class="d-flex justify-content-between">
+                                    <button type="button" class="btn btn-secondary" onclick="prevStep(3)">
+                                        <i class="bi bi-arrow-left"></i> Back
+                                    </button>
+                                    <button type="submit" class="btn btn-success btn-lg">
+                                        <i class="bi bi-person-check"></i> Register Customer
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let currentStep = 1;
+        const totalSteps = 4;
+
+        function updateProgress() {
+            const progress = (currentStep / totalSteps) * 100;
+            document.getElementById('progressBar').style.width = progress + '%';
+            document.getElementById('currentStep').textContent = currentStep;
+            document.getElementById('progressPercent').textContent = Math.round(progress) + '%';
+        }
+
+        function showStep(step) {
+            document.querySelectorAll('.form-step').forEach(el => {
+                el.classList.remove('active');
+            });
+            document.getElementById('step' + step).classList.add('active');
+            currentStep = step;
+            updateProgress();
+
+            if (step === 4) {
+                updateSummary();
+            }
+        }
+
+        function nextStep(next) {
+            // Validate current step before proceeding
+            if (validateStep(currentStep)) {
+                showStep(next);
+            }
+        }
+
+        function prevStep(prev) {
+            showStep(prev);
+        }
+
+        function validateStep(step) {
+            const currentStepEl = document.getElementById('step' + step);
+            const requiredFields = currentStepEl.querySelectorAll('[required]');
+            let isValid = true;
+
+            requiredFields.forEach(field => {
+                if (!field.value.trim() && field.type !== 'file') {
+                    field.classList.add('is-invalid');
+                    isValid = false;
+                } else {
+                    field.classList.remove('is-invalid');
+                }
+            });
+
+            if (!isValid) {
+                alert('Please fill in all required fields before proceeding.');
+            }
+
+            return isValid;
+        }
+
+        function addBeneficiary() {
+            const beneficiariesDiv = document.getElementById('beneficiaries');
+            const newEntry = document.createElement('div');
+            newEntry.className = 'beneficiary-entry';
+            newEntry.innerHTML = `
+                <div class="row">
+                    <div class="col-md-4 mb-2">
+                        <label class="form-label">Full Name</label>
+                        <input type="text" class="form-control" name="beneficiary_name[]">
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <label class="form-label">Relationship</label>
+                        <select class="form-select" name="beneficiary_relationship[]">
+                            <option value="">Select</option>
+                            <option value="Spouse">Spouse</option>
+                            <option value="Child">Child</option>
+                            <option value="Parent">Parent</option>
+                            <option value="Sibling">Sibling</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <label class="form-label">Birthdate</label>
+                        <input type="date" class="form-control" name="beneficiary_birthdate[]">
+                    </div>
+                    <div class="col-md-2 mb-2">
+                        <label class="form-label">Percentage</label>
+                        <div class="input-group">
+                            <input type="number" class="form-control" name="beneficiary_percentage[]" min="0" max="100" placeholder="%">
+                            <button type="button" class="btn btn-outline-danger" onclick="removeBeneficiary(this)">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            beneficiariesDiv.appendChild(newEntry);
+        }
+
+        function removeBeneficiary(button) {
+            const beneficiaryEntry = button.closest('.beneficiary-entry');
+            // Don't remove the first beneficiary entry
+            const allEntries = document.querySelectorAll('.beneficiary-entry');
+            if (allEntries.length > 1) {
+                beneficiaryEntry.remove();
+            } else {
+                alert('At least one beneficiary entry must remain. You can clear the fields instead.');
+            }
+        }
+
+        function updateSummary() {
+            const form = document.getElementById('customerForm');
+            const formData = new FormData(form);
+            
+            // Personal Info Summary
+            const lastName = formData.get('last_name') || '';
+            const firstName = formData.get('first_name') || '';
+            const middleName = formData.get('middle_name') || '';
+            const suffix = formData.get('suffix') || '';
+            
+            const fullName = `${lastName}, ${firstName} ${middleName} ${suffix}`.trim();
+            
+            const personalInfo = `
+                <strong>Name:</strong> ${fullName}<br>
+                <strong>Gender:</strong> ${formData.get('gender') || 'Not specified'}<br>
+                <strong>Civil Status:</strong> ${formData.get('civil_status') || 'Not specified'}<br>
+                <strong>Date of Birth:</strong> ${formData.get('date_of_birth') || 'Not specified'}
+            `;
+            document.getElementById('summaryPersonal').innerHTML = personalInfo;
+
+            // Contact & Pension Summary
+            const contactInfo = `
+                <strong>Mobile:</strong> ${formData.get('mobile_number') || 'Not specified'}<br>
+                <strong>Email:</strong> ${formData.get('email') || 'Not specified'}<br>
+                <strong>Pension System:</strong> ${formData.get('pension_system') || 'Not specified'}<br>
+                <strong>Pension Number:</strong> ${formData.get('pension_number') || 'Not specified'}<br>
+                <strong>Monthly Pension:</strong> ₱${formData.get('monthly_pension') || '0'}
+            `;
+            document.getElementById('summaryContact').innerHTML = contactInfo;
+
+            // Address Summary
+            const addressInfo = `
+                ${formData.get('street_address') || ''}, ${formData.get('barangay') || ''}<br>
+                ${formData.get('city') || ''}, ${formData.get('province') || ''}<br>
+                ${formData.get('region') || ''} ${formData.get('zip_code') || ''}
+            `;
+            document.getElementById('summaryAddress').innerHTML = addressInfo;
+        }
+
+        function previewFile(input, previewId) {
+            const file = input.files[0];
+            const preview = document.getElementById(previewId);
+            
+            if (file) {
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                }
+                
+                if (file.type.startsWith('image/')) {
+                    reader.readAsDataURL(file);
+                } else {
+                    // For PDF files, show a placeholder
+                    preview.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjE1MCIgdmlld0JveD0iMCAwIDIwMCAxNTAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMTUwIiBmaWxsPSIjRkZGRkZGIi8+CjxwYXRoIGQ9Ik02MCA2MEgxNDBWODBINjBWNjBaIiBmaWxsPSIjMDA3Q0ZGIi8+CjxwYXRoIGQ9Ik02MCA5MEgxNDBWMTEwSDYwVjkwWiIgZmlsbD0iIzAwN0NGRiIvPgo8cGF0aCBkPSJNNjAgMTIwSDE0MFYxNDBINjBWMTIwWiIgZmlsbD0iIzAwN0NGRiIvPgo8cGF0aCBkPSJNNDAgMzBIMTYwVjE1MEg0MFYzMFoiIHN0cm9rZT0iIzAwN0NGRiIgc3Ryb2tlLXdpZHRoPSIyIi8+Cjx0ZXh0IHg9IjEwMCIgeT0iNDAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiMwMDdDRkYiIGZvbnQtc2l6ZT0iMTQiIGZvbnQtZmFtaWx5PSJBcmlhbCI+UERGIERvY3VtZW50PC90ZXh0Pgo8L3N2Zz4=';
+                    preview.style.display = 'block';
+                }
+                
+                // Validate file size (10MB)
+                if (file.size > 10 * 1024 * 1024) {
+                    alert('File size exceeds 10MB limit. Please choose a smaller file.');
+                    input.value = '';
+                    preview.style.display = 'none';
+                    return;
+                }
+                
+                // Validate file type
+                const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+                if (!validTypes.includes(file.type)) {
+                    alert('Please upload only JPG, PNG, PDF, DOC, or DOCX files.');
+                    input.value = '';
+                    preview.style.display = 'none';
+                    return;
+                }
+                
+                // Remove invalid class if previously added
+                input.classList.remove('is-invalid');
+                
+                // Auto-check the corresponding checkbox
+                const fileInputs = Array.from(document.querySelectorAll('input[type="file"][required]'));
+                const index = fileInputs.indexOf(input);
+                if (index !== -1) {
+                    const checkbox = document.getElementById('doc' + (index + 1));
+                    if (checkbox) {
+                        checkbox.checked = true;
+                    }
+                }
+            } else {
+                preview.style.display = 'none';
+            }
+        }
+
+        function validateDocuments() {
+            const fileInputs = document.querySelectorAll('input[type="file"][required]');
+            let allFilesUploaded = true;
+            
+            fileInputs.forEach(input => {
+                if (!input.files || input.files.length === 0) {
+                    input.classList.add('is-invalid');
+                    allFilesUploaded = false;
+                } else {
+                    input.classList.remove('is-invalid');
+                    
+                    // Check file size (10MB limit)
+                    const file = input.files[0];
+                    if (file.size > 10 * 1024 * 1024) {
+                        alert(`File ${input.name} exceeds 10MB limit`);
+                        allFilesUploaded = false;
+                    }
+                }
+            });
+            
+            return allFilesUploaded;
+        }
+
+        // Initialize form
+        document.addEventListener('DOMContentLoaded', function() {
+            updateProgress();
+            
+            // Add real-time validation
+            document.querySelectorAll('input[required]').forEach(input => {
+                if (input.type !== 'file') {
+                    input.addEventListener('blur', function() {
+                        if (!this.value.trim()) {
+                            this.classList.add('is-invalid');
+                        } else {
+                            this.classList.remove('is-invalid');
+                        }
+                    });
+                }
+            });
+
+            // Auto-check document checkboxes when files are uploaded
+            document.querySelectorAll('input[type="file"]').forEach(input => {
+                input.addEventListener('change', function() {
+                    const fileInputs = Array.from(document.querySelectorAll('input[type="file"][required]'));
+                    const index = fileInputs.indexOf(this);
+                    if (index !== -1) {
+                        const checkbox = document.getElementById('doc' + (index + 1));
+                        if (checkbox && this.files.length > 0) {
+                            checkbox.checked = true;
+                        }
+                    }
+                });
+            });
+        });
+
+        // Form submission validation
+        document.getElementById('customerForm').addEventListener('submit', function(e) {
+            console.log('Form submission started...');
+            
+            if (!validateStep(4) || !validateDocuments()) {
+                e.preventDefault();
+                alert('Please complete all required fields, checklists, and upload all documents before submitting.');
+                return false;
+            }
+            
+            // Check agreement checkboxes
+            const privacyAgreement = document.getElementById('privacy_agreement');
+            const verificationAgreement = document.getElementById('verification_agreement');
+            
+            if (!privacyAgreement.checked || !verificationAgreement.checked) {
+                e.preventDefault();
+                alert('Please agree to both the privacy policy and verification agreement.');
+                return false;
+            }
+
+            // Check document checkboxes
+            const docCheckboxes = document.querySelectorAll('.document-checklist input[type="checkbox"]');
+            let allDocsChecked = true;
+            docCheckboxes.forEach(checkbox => {
+                if (!checkbox.checked) {
+                    allDocsChecked = false;
+                }
+            });
+
+            if (!allDocsChecked) {
+                e.preventDefault();
+                alert('Please confirm that all required documents have been uploaded by checking all document checkboxes.');
+                return false;
+            }
+
+            // Show loading state
+            const submitBtn = this.querySelector('button[type="submit"]');
+            submitBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Registering...';
+            submitBtn.disabled = true;
+
+            console.log('Form validation passed, submitting...');
+            return true;
+        });
+    </script>
+</body>
+</html>

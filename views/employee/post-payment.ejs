@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %> - Millenium Cash</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --primary-color: #fd7e14;
+            --success-color: #28a745;
+            --danger-color: #dc3545;
+            --info-color: #17a2b8;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+        }
+        
+        .payment-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .payment-card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+            margin-bottom: 30px;
+        }
+        
+        .payment-header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #e55a00 100%);
+            color: white;
+            padding: 25px 30px;
+        }
+        
+        .payment-header h2 {
+            margin: 0;
+            font-weight: 600;
+        }
+        
+        .payment-header p {
+            margin: 5px 0 0;
+            opacity: 0.9;
+        }
+        
+        .payment-body {
+            padding: 30px;
+        }
+        
+        .loan-info-card {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 25px;
+            border-left: 4px solid var(--primary-color);
+        }
+        
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px dashed #dee2e6;
+        }
+        
+        .info-label {
+            font-weight: 600;
+            color: #495057;
+        }
+        
+        .info-value {
+            color: #212529;
+            font-weight: 500;
+        }
+        
+        .amount-highlight {
+            font-size: 28px;
+            font-weight: bold;
+            color: var(--success-color);
+        }
+        
+        .installment-list {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #dee2e6;
+            border-radius: 10px;
+            margin-top: 10px;
+        }
+        
+        .installment-item {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .installment-item:hover {
+            background: #f8f9fa;
+            transform: translateX(5px);
+        }
+        
+        .installment-item.selected {
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdef5 100%);
+            border-left: 3px solid var(--primary-color);
+        }
+        
+        .installment-item.overdue {
+            background: #fff3cd;
+        }
+        
+        .installment-item.paid {
+            background: #d4edda;
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .form-section {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        
+        .form-label {
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .form-control, .form-select {
+            border-radius: 10px;
+            border: 1px solid #dee2e6;
+            padding: 10px 15px;
+        }
+        
+        .form-control:focus, .form-select:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(253, 126, 20, 0.25);
+        }
+        
+        .btn-submit {
+            background: linear-gradient(135deg, var(--success-color) 0%, #1e7e34 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(40, 167, 69, 0.3);
+        }
+        
+        .btn-submit:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+        
+        .btn-secondary-custom {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 10px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-secondary-custom:hover {
+            background: #5a6268;
+        }
+        
+        .search-box {
+            position: relative;
+            margin-bottom: 20px;
+        }
+        
+        .search-box input {
+            padding-left: 45px;
+        }
+        
+        .search-box i {
+            position: absolute;
+            left: 15px;
+            top: 12px;
+            color: #6c757d;
+        }
+        
+        .alert-custom {
+            border-radius: 10px;
+            padding: 15px 20px;
+        }
+        
+        .badge-custom {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+        }
+        
+        @media (max-width: 768px) {
+            .payment-body {
+                padding: 20px;
+            }
+            .info-row {
+                flex-direction: column;
+            }
+            .info-value {
+                margin-top: 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/dashboard">
+                <i class="bi bi-cash-coin me-2"></i>Millenium Cash
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="/dashboard">Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/loans">Loan Applications</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/employee/register-customer">Register Customer</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/employee/pension-withdrawals">Pension Withdrawals</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/employee/collection-postings">Collection Postings</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="/employee/payments">Payment Posting</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/profile">Profile</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/logout">Logout</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="payment-container">
+        <div class="payment-card">
+            <div class="payment-header">
+                <h2><i class="bi bi-credit-card me-2"></i>Post Loan Payment</h2>
+                <p>Record and process customer loan payments</p>
+            </div>
+            
+            <div class="payment-body">
+                <!-- Loan Search Section -->
+                <div class="search-box">
+                    <i class="bi bi-search"></i>
+                    <input type="text" class="form-control" id="searchLoanInput" 
+                           placeholder="Search by Loan ID, Customer Name, or Pension Number...">
+                    <div id="searchResults" class="mt-2" style="display: none;"></div>
+                </div>
+
+                <!-- Loan Information Section -->
+                <div id="loanInfoSection" style="display: none;">
+                    <div class="loan-info-card">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="info-row">
+                                    <span class="info-label">Loan ID:</span>
+                                    <span class="info-value" id="loanId">-</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">Customer Name:</span>
+                                    <span class="info-value" id="customerName">-</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">Pension Number:</span>
+                                    <span class="info-value" id="pensionNumber">-</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">Loan Amount:</span>
+                                    <span class="info-value" id="loanAmount">-</span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="info-row">
+                                    <span class="info-label">Monthly Payment:</span>
+                                    <span class="info-value" id="monthlyPayment">-</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">Interest Rate:</span>
+                                    <span class="info-value" id="interestRate">-</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">Duration:</span>
+                                    <span class="info-value" id="duration">-</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">Status:</span>
+                                    <span class="info-value" id="loanStatus">-</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                <div class="info-row">
+                                    <span class="info-label">Remaining Balance:</span>
+                                    <span class="info-value amount-highlight" id="remainingBalance">₱0.00</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Installment Selection -->
+                    <h5 class="mb-3"><i class="bi bi-calendar-check me-2"></i>Select Installment to Pay</h5>
+                    <div id="installmentList" class="installment-list">
+                        <div class="text-center text-muted p-4">
+                            <i class="bi bi-hourglass-split fs-1"></i>
+                            <p class="mt-2">Loading installments...</p>
+                        </div>
+                    </div>
+
+                    <!-- Payment Form -->
+                    <div class="form-section">
+                        <h5 class="mb-3"><i class="bi bi-cash-stack me-2"></i>Payment Details</h5>
+                        <form id="paymentForm" action="/employee/process-payment" method="POST">
+                            <input type="hidden" name="loan_id" id="formLoanId">
+                            <input type="hidden" name="installment_number" id="selectedInstallment">
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Payment Date *</label>
+                                    <input type="date" class="form-control" name="payment_date" 
+                                           id="paymentDate" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Amount Paid *</label>
+                                    <input type="number" step="0.01" class="form-control" 
+                                           name="amount_paid" id="amountPaid" required>
+                                    <small class="text-muted">Enter full or partial payment amount</small>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Payment Method *</label>
+                                    <select class="form-select" name="payment_method" required>
+                                        <option value="">Select payment method...</option>
+                                        <option value="cash">💵 Cash</option>
+                                        <option value="bank_transfer">🏦 Bank Transfer</option>
+                                        <option value="gcash">📱 GCash</option>
+                                        <option value="paymaya">📱 PayMaya</option>
+                                        <option value="check">📝 Check</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Reference Number</label>
+                                    <input type="text" class="form-control" name="reference_number" 
+                                           placeholder="Transaction ID / Check Number / OR Number">
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Notes (Optional)</label>
+                                <textarea class="form-control" name="notes" rows="3" 
+                                          placeholder="Additional notes about this payment (e.g., partial payment arrangement, etc.)"></textarea>
+                            </div>
+
+                            <div class="alert alert-warning alert-custom">
+                                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                <strong>Important Notes:</strong>
+                                <ul class="mb-0 mt-2">
+                                    <li>Partial payments are allowed - the system will track remaining balance</li>
+                                    <li>Overpayments will be recorded and can be applied to future installments</li>
+                                    <li>A receipt will be generated automatically after successful payment</li>
+                                    <li>All payments are logged for audit purposes</li>
+                                </ul>
+                            </div>
+
+                            <div class="d-flex justify-content-between gap-3 mt-4">
+                                <a href="/employee/payments" class="btn-secondary-custom btn">
+                                    <i class="bi bi-arrow-left me-2"></i>Back to Payments
+                                </a>
+                                <button type="submit" class="btn-submit" id="submitBtn" disabled>
+                                    <i class="bi bi-check-circle me-2"></i>Process Payment
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Empty State -->
+                <div id="emptyState" class="text-center py-5">
+                    <i class="bi bi-search display-1 text-muted"></i>
+                    <h4 class="mt-3 text-muted">Find a Loan to Post Payment</h4>
+                    <p class="text-muted">Search by Loan ID, Customer Name, or Pension Number above</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Set default payment date to today
+        document.getElementById('paymentDate').value = new Date().toISOString().split('T')[0];
+        
+        let searchTimeout;
+        let currentLoanData = null;
+
+        // Search functionality with debounce
+        document.getElementById('searchLoanInput').addEventListener('input', function(e) {
+            clearTimeout(searchTimeout);
+            const searchTerm = e.target.value.trim();
+            
+            if (searchTerm.length < 2) {
+                document.getElementById('searchResults').style.display = 'none';
+                return;
+            }
+            
+            searchTimeout = setTimeout(() => {
+                searchLoans(searchTerm);
+            }, 500);
+        });
+
+        // Search loans function
+        function searchLoans(searchTerm) {
+            fetch(`/api/search-loan?q=${encodeURIComponent(searchTerm)}`)
+                .then(response => response.json())
+                .then(data => {
+                    const resultsDiv = document.getElementById('searchResults');
+                    if (data.success && data.loans && data.loans.length > 0) {
+                        let html = '<div class="list-group shadow-sm">';
+                        data.loans.forEach(loan => {
+                            const statusBadge = getStatusBadge(loan.status);
+                            html += `
+                                <div class="list-group-item list-group-item-action" 
+                                     onclick="selectLoan(${loan.loan_id})"
+                                     style="cursor: pointer;">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <strong>Loan #${loan.loan_id}</strong>
+                                            <span class="badge ${statusBadge.class} ms-2">${statusBadge.text}</span>
+                                            <br>
+                                            <small>${loan.first_name} ${loan.last_name}</small>
+                                            <br>
+                                            <small class="text-muted">Pension: ${loan.pension_number || 'N/A'}</small>
+                                        </div>
+                                        <div class="text-end">
+                                            <strong class="text-primary">₱${parseFloat(loan.loan_amount).toLocaleString()}</strong>
+                                            <br>
+                                            <small>Monthly: ₱${parseFloat(loan.monthly_payment).toLocaleString()}</small>
+                                            <br>
+                                            <i class="bi bi-chevron-right"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                        html += '</div>';
+                        resultsDiv.innerHTML = html;
+                        resultsDiv.style.display = 'block';
+                    } else {
+                        resultsDiv.innerHTML = `
+                            <div class="alert alert-warning">
+                                <i class="bi bi-exclamation-triangle"></i>
+                                No loans found matching "${searchTerm}"
+                            </div>
+                        `;
+                        resultsDiv.style.display = 'block';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error searching loans:', error);
+                    document.getElementById('searchResults').innerHTML = `
+                        <div class="alert alert-danger">
+                            Error searching for loans. Please try again.
+                        </div>
+                    `;
+                    document.getElementById('searchResults').style.display = 'block';
+                });
+        }
+
+        // Select loan function
+        function selectLoan(loanId) {
+            // Hide search results
+            document.getElementById('searchResults').style.display = 'none';
+            document.getElementById('searchLoanInput').value = '';
+            
+            // Show loading state
+            document.getElementById('loanInfoSection').style.display = 'block';
+            document.getElementById('emptyState').style.display = 'none';
+            
+            // Fetch loan details
+            fetch(`/api/loan/${loanId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const loan = data.loan;
+                        currentLoanData = loan;
+                        
+                        // Update loan info section
+                        document.getElementById('loanId').innerHTML = `#${loan.loan_id}`;
+                        document.getElementById('customerName').innerHTML = `${loan.first_name} ${loan.last_name}`;
+                        document.getElementById('pensionNumber').innerHTML = loan.pension_number || 'N/A';
+                        document.getElementById('loanAmount').innerHTML = `₱${parseFloat(loan.loan_amount).toLocaleString()}`;
+                        document.getElementById('monthlyPayment').innerHTML = `₱${parseFloat(loan.monthly_payment).toLocaleString()}`;
+                        document.getElementById('interestRate').innerHTML = `${loan.interest_rate}%`;
+                        document.getElementById('duration').innerHTML = `${loan.duration_months} months`;
+                        document.getElementById('loanStatus').innerHTML = `<span class="badge ${getStatusBadge(loan.status).class}">${loan.status.toUpperCase()}</span>`;
+                        document.getElementById('formLoanId').value = loan.loan_id;
+                        
+                        // Load remaining balance
+                        loadRemainingBalance(loanId);
+                        
+                        // Load installments
+                        loadInstallments(loanId);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading loan:', error);
+                    alert('Error loading loan details. Please try again.');
+                });
+        }
+
+        // Load remaining balance
+        function loadRemainingBalance(loanId) {
+            fetch(`/api/loan/${loanId}/remaining-balance`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        document.getElementById('remainingBalance').innerHTML = `₱${parseFloat(data.remaining_balance).toLocaleString()}`;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading balance:', error);
+                });
+        }
+
+        // Load installments
+        function loadInstallments(loanId) {
+            fetch(`/api/loan/${loanId}/installments`)
+                .then(response => response.json())
+                .then(data => {
+                    const container = document.getElementById('installmentList');
+                    if (data.success && data.installments && data.installments.length > 0) {
+                        const pendingInstallments = data.installments.filter(inst => inst.status !== 'paid');
+                        
+                        if (pendingInstallments.length > 0) {
+                            container.innerHTML = pendingInstallments.map(inst => `
+                                <div class="installment-item ${inst.status}" 
+                                     onclick="selectInstallment(this, ${inst.installment_number}, ${inst.total_amount})">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <strong>Installment ${inst.installment_number}</strong>
+                                            <br>
+                                            <small class="text-muted">
+                                                <i class="bi bi-calendar3"></i> Due: ${new Date(inst.due_date).toLocaleDateString()}
+                                            </small>
+                                        </div>
+                                        <div class="text-end">
+                                            <strong class="text-primary">₱${parseFloat(inst.total_amount).toLocaleString()}</strong>
+                                            <br>
+                                            <span class="badge bg-${inst.status === 'overdue' ? 'danger' : 'warning'} badge-custom">
+                                                ${inst.status.toUpperCase()}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            `).join('');
+                            document.getElementById('submitBtn').disabled = true;
+                        } else {
+                            container.innerHTML = `
+                                <div class="text-center text-success p-4">
+                                    <i class="bi bi-check-circle-fill fs-1"></i>
+                                    <p class="mt-2 mb-0">All installments are fully paid for this loan!</p>
+                                </div>
+                            `;
+                            document.getElementById('submitBtn').disabled = true;
+                        }
+                    } else {
+                        container.innerHTML = `
+                            <div class="text-center text-muted p-4">
+                                <i class="bi bi-calendar-x fs-1"></i>
+                                <p class="mt-2 mb-0">No payment schedule found for this loan.</p>
+                            </div>
+                        `;
+                        document.getElementById('submitBtn').disabled = true;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading installments:', error);
+                    document.getElementById('installmentList').innerHTML = `
+                        <div class="text-center text-danger p-4">
+                            <i class="bi bi-exclamation-triangle-fill fs-1"></i>
+                            <p class="mt-2 mb-0">Error loading installments. Please try again.</p>
+                        </div>
+                    `;
+                });
+        }
+
+        // Select installment
+        function selectInstallment(element, installmentNumber, amount) {
+            // Remove selected class from all
+            document.querySelectorAll('.installment-item').forEach(item => {
+                item.classList.remove('selected');
+            });
+            // Add selected class to clicked element
+            element.classList.add('selected');
+            // Set values
+            document.getElementById('selectedInstallment').value = installmentNumber;
+            document.getElementById('amountPaid').value = amount;
+            document.getElementById('submitBtn').disabled = false;
+            
+            // Scroll to payment form
+            document.querySelector('.form-section').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Get status badge
+        function getStatusBadge(status) {
+            const badges = {
+                'approved': { class: 'bg-success', text: 'APPROVED' },
+                'pending': { class: 'bg-warning text-dark', text: 'PENDING' },
+                'rejected': { class: 'bg-danger', text: 'REJECTED' },
+                'disbursed': { class: 'bg-info', text: 'DISBURSED' }
+            };
+            return badges[status] || { class: 'bg-secondary', text: status.toUpperCase() };
+        }
+
+        // Form validation before submit
+        document.getElementById('paymentForm').addEventListener('submit', function(e) {
+            const loanId = document.getElementById('formLoanId').value;
+            const installmentNumber = document.getElementById('selectedInstallment').value;
+            const amountPaid = document.getElementById('amountPaid').value;
+            const paymentMethod = document.querySelector('[name="payment_method"]').value;
+            const paymentDate = document.getElementById('paymentDate').value;
+            
+            if (!loanId) {
+                e.preventDefault();
+                alert('Please select a loan first');
+                return false;
+            }
+            
+            if (!installmentNumber) {
+                e.preventDefault();
+                alert('Please select an installment to pay');
+                return false;
+            }
+            
+            if (!amountPaid || parseFloat(amountPaid) <= 0) {
+                e.preventDefault();
+                alert('Please enter a valid payment amount');
+                return false;
+            }
+            
+            if (!paymentMethod) {
+                e.preventDefault();
+                alert('Please select a payment method');
+                return false;
+            }
+            
+            if (!paymentDate) {
+                e.preventDefault();
+                alert('Please select a payment date');
+                return false;
+            }
+            
+            // Show loading state on button
+            const submitBtn = document.getElementById('submitBtn');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Processing...';
+            submitBtn.disabled = true;
+            
+            // Allow form to submit
+            return true;
+        });
+
+        // Enter key to trigger search
+        document.getElementById('searchLoanInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                const searchTerm = this.value.trim();
+                if (searchTerm.length >= 2) {
+                    searchLoans(searchTerm);
+                }
+            }
+        });
+
+        // Clear search results when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!document.getElementById('searchResults').contains(e.target) && 
+                e.target !== document.getElementById('searchLoanInput')) {
+                setTimeout(() => {
+                    document.getElementById('searchResults').style.display = 'none';
+                }, 200);
+            }
+        });
+    </script>
+</body>
+</html>

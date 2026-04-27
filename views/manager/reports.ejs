@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .stat-card {
+            border-radius: 10px;
+            border: none;
+            transition: transform 0.2s;
+        }
+        .stat-card:hover {
+            transform: translateY(-2px);
+        }
+        .stat-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-bottom: 20px;
+        }
+        .report-section {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .filter-section {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .team-member-card {
+            border-left: 4px solid #007bff;
+            transition: all 0.3s ease;
+        }
+        .team-member-card:hover {
+            background-color: #f8f9fa;
+        }
+        .export-btn {
+            min-width: 120px;
+        }
+        .no-data {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+        }
+        .loading-row {
+            text-align: center;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/dashboard">
+                <i class="bi bi-cash-coin me-2"></i> Pension Loan System
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="/dashboard">Dashboard</a>
+                <a class="nav-link" href="/loans">Loan Applications</a>
+                <a class="nav-link" href="/manager/team">Team Management</a>
+                <a class="nav-link active" href="/manager/reports">Reports</a>
+                <a class="nav-link" href="/manager/analytics">Analytics</a>
+                <a class="nav-link" href="/profile">Profile</a>
+                <a class="nav-link" href="/logout">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container my-4">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="mb-1"><i class="bi bi-graph-up me-2"></i>Manager Reports & Analytics</h2>
+                <p class="text-muted mb-0">Comprehensive reports and performance analytics</p>
+            </div>
+            <div class="d-flex gap-2">
+                <button class="btn btn-outline-primary" onclick="generatePDFReport()">
+                    <i class="bi bi-file-pdf me-2"></i>Export PDF
+                </button>
+                <button class="btn btn-outline-success" onclick="exportToExcel()">
+                    <i class="bi bi-file-earmark-excel me-2"></i>Export Excel
+                </button>
+            </div>
+        </div>
+
+        <!-- Date Range Filter -->
+        <div class="filter-section">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h5 class="mb-3">Report Period</h5>
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Start Date</label>
+                            <input type="date" class="form-control" id="startDate" value="<%= new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0] %>">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">End Date</label>
+                            <input type="date" class="form-control" id="endDate" value="<%= new Date().toISOString().split('T')[0] %>">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">&nbsp;</label>
+                            <div>
+                                <button class="btn btn-primary w-100" onclick="loadReports()">
+                                    <i class="bi bi-filter me-2"></i>Apply Filter
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-outline-secondary" onclick="setDateRange('month')">
+                            This Month
+                        </button>
+                        <button class="btn btn-outline-secondary" onclick="setDateRange('quarter')">
+                            This Quarter
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Key Metrics -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card stat-card bg-primary text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h4 class="mb-0">₱<span id="totalDisbursed">0</span></h4>
+                                <p class="mb-0">Total Disbursed</p>
+                            </div>
+                            <div class="stat-icon bg-white text-primary">
+                                <i class="bi bi-cash-coin"></i>
+                            </div>
+                        </div>
+                        <small><span id="disbursedChange" class="badge bg-success">0%</span> vs previous period</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card stat-card bg-success text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h4 class="mb-0" id="totalLoans">0</h4>
+                                <p class="mb-0">Total Loans</p>
+                            </div>
+                            <div class="stat-icon bg-white text-success">
+                                <i class="bi bi-clipboard-data"></i>
+                            </div>
+                        </div>
+                        <small><span id="loansChange" class="badge bg-success">0%</span> vs previous period</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card stat-card bg-warning text-dark">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h4 class="mb-0" id="pendingLoans">0</h4>
+                                <p class="mb-0">Pending Loans</p>
+                            </div>
+                            <div class="stat-icon bg-white text-warning">
+                                <i class="bi bi-clock"></i>
+                            </div>
+                        </div>
+                        <small>Requiring approval</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card stat-card bg-info text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h4 class="mb-0">₱<span id="totalInterest">0</span></h4>
+                                <p class="mb-0">Interest Revenue</p>
+                            </div>
+                            <div class="stat-icon bg-white text-info">
+                                <i class="bi bi-graph-up"></i>
+                            </div>
+                        </div>
+                        <small>Projected earnings</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Section -->
+        <div class="row mb-4">
+            <div class="col-md-8">
+                <div class="report-section">
+                    <h5 class="mb-3">Loan Performance Overview</h5>
+                    <div class="chart-container">
+                        <canvas id="loanPerformanceChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="report-section">
+                    <h5 class="mb-3">Loan Type Distribution</h5>
+                    <div class="chart-container">
+                        <canvas id="loanTypeChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Team Performance -->
+        <div class="report-section mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="mb-0">Team Performance</h5>
+                <button class="btn btn-sm btn-outline-primary" onclick="loadReports()">
+                    <i class="bi bi-arrow-clockwise"></i> Refresh
+                </button>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover" id="teamPerformanceTable">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Employee</th>
+                            <th>Total Loans</th>
+                            <th>Approved</th>
+                            <th>Pending</th>
+                            <th>Approval Rate</th>
+                            <th>Total Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody id="teamPerformanceBody">
+                        <tr class="loading-row">
+                            <td colspan="6" class="text-center py-4">
+                                <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
+                                Loading team data...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Monthly Breakdown -->
+        <div class="report-section mb-4">
+            <h5 class="mb-3">Monthly Loan Statistics</h5>
+            <div class="table-responsive">
+                <table class="table table-striped" id="monthlyStatsTable">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Month</th>
+                            <th>Total Loans</th>
+                            <th>Approved</th>
+                            <th>Pending</th>
+                            <th>Rejected</th>
+                            <th>Total Amount</th>
+                            <th>Avg. Loan Size</th>
+                        </tr>
+                    </thead>
+                    <tbody id="monthlyStatsBody">
+                        <tr class="loading-row">
+                            <td colspan="7" class="text-center py-4">
+                                <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
+                                Loading monthly statistics...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="report-section">
+            <h5 class="mb-3">Quick Statistics</h5>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h6 class="card-title"><i class="bi bi-list-check me-2"></i>Loan Status Summary</h6>
+                            <div id="loanStatusSummary">
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span>Approved Loans:</span>
+                                    <strong id="approvedCount">0</strong>
+                                </div>
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span>Pending Approval:</span>
+                                    <strong id="pendingCount">0</strong>
+                                </div>
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span>Rejected Loans:</span>
+                                    <strong id="rejectedCount">0</strong>
+                                </div>
+                                <div class="d-flex justify-content-between">
+                                    <span>Disbursed Loans:</span>
+                                    <strong id="disbursedCount">0</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h6 class="card-title"><i class="bi bi-clock-history me-2"></i>Performance Metrics</h6>
+                            <div id="performanceMetrics">
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span>Average Loan Size:</span>
+                                    <strong>₱<span id="avgLoanSize">0</span></strong>
+                                </div>
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span>Total Interest Revenue:</span>
+                                    <strong>₱<span id="totalInterestRevenue">0</span></strong>
+                                </div>
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span>Approval Rate:</span>
+                                    <strong><span id="overallApprovalRate">0</span>%</strong>
+                                </div>
+                                <div class="d-flex justify-content-between">
+                                    <span>Active Employees:</span>
+                                    <strong id="activeEmployees">0</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let performanceChart, typeChart;
+        let isLoading = false;
+
+        // Initialize charts
+        function initializeCharts() {
+            const performanceCtx = document.getElementById('loanPerformanceChart').getContext('2d');
+            const typeCtx = document.getElementById('loanTypeChart').getContext('2d');
+
+            // Initialize with empty data first
+            performanceChart = new Chart(performanceCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Loading...'],
+                    datasets: [{
+                        label: 'Loans Disbursed',
+                        data: [0],
+                        borderColor: '#007bff',
+                        backgroundColor: 'rgba(0, 123, 255, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return '₱' + value.toLocaleString();
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            typeChart = new Chart(typeCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Loading...'],
+                    datasets: [{
+                        data: [1],
+                        backgroundColor: [
+                            '#007bff', '#28a745', '#ffc107', '#dc3545', '#6f42c1', '#fd7e14'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                        }
+                    }
+                }
+            });
+        }
+
+        // Set date range
+        function setDateRange(range) {
+            const now = new Date();
+            let startDate = new Date();
+
+            switch(range) {
+                case 'month':
+                    startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+                    break;
+                case 'quarter':
+                    const quarter = Math.floor(now.getMonth() / 3);
+                    startDate = new Date(now.getFullYear(), quarter * 3, 1);
+                    break;
+                case 'year':
+                    startDate = new Date(now.getFullYear(), 0, 1);
+                    break;
+            }
+
+            document.getElementById('startDate').value = startDate.toISOString().split('T')[0];
+            document.getElementById('endDate').value = now.toISOString().split('T')[0];
+            loadReports();
+        }
+
+        // Show loading state in tables
+        function showLoadingState() {
+            document.getElementById('teamPerformanceBody').innerHTML = `
+                <tr class="loading-row">
+                    <td colspan="6" class="text-center py-4">
+                        <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
+                        Loading team data...
+                    </td>
+                </tr>
+            `;
+            
+            document.getElementById('monthlyStatsBody').innerHTML = `
+                <tr class="loading-row">
+                    <td colspan="7" class="text-center py-4">
+                        <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
+                        Loading monthly statistics...
+                    </td>
+                </tr>
+            `;
+        }
+
+        // Load reports data
+        function loadReports() {
+            if (isLoading) return;
+            
+            isLoading = true;
+            showLoadingState();
+            
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+
+            console.log('Loading reports for:', startDate, 'to', endDate);
+
+            // Add cache busting parameter
+            fetch(`/api/manager/reports?startDate=${startDate}&endDate=${endDate}&t=${Date.now()}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Received data:', data);
+                    updateMetrics(data.metrics);
+                    updateCharts(data.charts);
+                    updateTeamPerformance(data.teamPerformance);
+                    updateMonthlyStats(data.monthlyStats);
+                    updateQuickStats(data);
+                    isLoading = false;
+                })
+                .catch(error => {
+                    console.error('Error loading reports:', error);
+                    isLoading = false;
+                    alert('Error loading reports data. Please check if the API endpoint is available.');
+                    // Show placeholder data
+                    showPlaceholderData();
+                });
+        }
+
+        // Show placeholder data when API fails
+        function showPlaceholderData() {
+            const placeholderMetrics = {
+                totalLoans: 0,
+                pendingLoans: 0,
+                totalDisbursed: 0,
+                totalInterest: 0,
+                disbursedChange: 0,
+                loansChange: 0
+            };
+            
+            const placeholderCharts = {
+                performance: {
+                    labels: ['No Data Available'],
+                    data: [0]
+                },
+                loanTypes: {
+                    labels: ['No Data'],
+                    data: [1]
+                }
+            };
+
+            updateMetrics(placeholderMetrics);
+            updateCharts(placeholderCharts);
+            updateTeamPerformance([]);
+            updateMonthlyStats([]);
+            updateQuickStats({});
+        }
+
+        // Update metrics
+        function updateMetrics(metrics) {
+            console.log('Updating metrics:', metrics);
+            
+            document.getElementById('totalDisbursed').textContent = (metrics.totalDisbursed || 0).toLocaleString();
+            document.getElementById('totalLoans').textContent = metrics.totalLoans || 0;
+            document.getElementById('pendingLoans').textContent = metrics.pendingLoans || 0;
+            document.getElementById('totalInterest').textContent = (metrics.totalInterest || 0).toLocaleString();
+            
+            // Update change percentages with color coding
+            const disbursedChangeElem = document.getElementById('disbursedChange');
+            const loansChangeElem = document.getElementById('loansChange');
+            
+            const disbursedChange = metrics.disbursedChange || 0;
+            const loansChange = metrics.loansChange || 0;
+            
+            disbursedChangeElem.textContent = (disbursedChange >= 0 ? '+' : '') + disbursedChange + '%';
+            loansChangeElem.textContent = (loansChange >= 0 ? '+' : '') + loansChange + '%';
+            
+            // Set badge colors based on change
+            disbursedChangeElem.className = `badge bg-${disbursedChange >= 0 ? 'success' : 'danger'}`;
+            loansChangeElem.className = `badge bg-${loansChange >= 0 ? 'success' : 'danger'}`;
+        }
+
+        // Update charts
+        function updateCharts(chartData) {
+            console.log('Updating charts:', chartData);
+            
+            // Update performance chart
+            if (chartData.performance && chartData.performance.labels && chartData.performance.labels.length > 0) {
+                performanceChart.data.labels = chartData.performance.labels;
+                performanceChart.data.datasets[0].data = chartData.performance.data;
+            } else {
+                performanceChart.data.labels = ['No Data Available'];
+                performanceChart.data.datasets[0].data = [0];
+            }
+            performanceChart.update();
+
+            // Update loan type chart
+            if (chartData.loanTypes && chartData.loanTypes.labels && chartData.loanTypes.labels.length > 0) {
+                typeChart.data.labels = chartData.loanTypes.labels;
+                typeChart.data.datasets[0].data = chartData.loanTypes.data;
+            } else {
+                typeChart.data.labels = ['No Data Available'];
+                typeChart.data.datasets[0].data = [1];
+            }
+            typeChart.update();
+        }
+
+        // Update team performance
+        function updateTeamPerformance(teamData) {
+            const tbody = document.getElementById('teamPerformanceBody');
+            
+            if (!teamData || teamData.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="text-center py-4 text-muted">
+                            <i class="bi bi-people display-4 d-block mb-2"></i>
+                            No team data available for the selected period
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            let html = '';
+            teamData.forEach(member => {
+                html += `
+                    <tr>
+                        <td>
+                            <div class="fw-bold">${member.full_name || 'Unknown'}</div>
+                            <small class="text-muted">${member.email || 'No email'}</small>
+                        </td>
+                        <td>${member.total_loans || 0}</td>
+                        <td>${member.approved_loans || 0}</td>
+                        <td>${member.pending_loans || 0}</td>
+                        <td>
+                            <span class="badge bg-${(member.approval_rate || 0) >= 80 ? 'success' : (member.approval_rate || 0) >= 60 ? 'warning' : 'danger'}">
+                                ${member.approval_rate || 0}%
+                            </span>
+                        </td>
+                        <td>₱${parseInt(member.total_amount || 0).toLocaleString()}</td>
+                    </tr>
+                `;
+            });
+            tbody.innerHTML = html;
+        }
+
+        // Update monthly stats
+        function updateMonthlyStats(monthlyData) {
+            const tbody = document.getElementById('monthlyStatsBody');
+            
+            if (!monthlyData || monthlyData.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="text-center py-4 text-muted">
+                            <i class="bi bi-calendar-x display-4 d-block mb-2"></i>
+                            No monthly data available for the selected period
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            let html = '';
+            monthlyData.forEach(month => {
+                html += `
+                    <tr>
+                        <td>${month.month_name || 'Unknown Month'}</td>
+                        <td>${month.total_loans || 0}</td>
+                        <td>${month.approved_loans || 0}</td>
+                        <td>${month.pending_loans || 0}</td>
+                        <td>${month.rejected_loans || 0}</td>
+                        <td>₱${parseInt(month.total_amount || 0).toLocaleString()}</td>
+                        <td>₱${parseInt(month.avg_loan_size || 0).toLocaleString()}</td>
+                    </tr>
+                `;
+            });
+            tbody.innerHTML = html;
+        }
+
+        // Update quick stats
+        function updateQuickStats(data) {
+            const metrics = data.metrics || {};
+            
+            document.getElementById('approvedCount').textContent = metrics.approvedLoans || 0;
+            document.getElementById('pendingCount').textContent = metrics.pendingLoans || 0;
+            document.getElementById('rejectedCount').textContent = metrics.rejectedLoans || 0;
+            document.getElementById('disbursedCount').textContent = metrics.disbursedLoans || 0;
+            
+            // Calculate average loan size safely
+            const avgLoanSize = metrics.totalLoans > 0 ? 
+                (metrics.totalDisbursed / metrics.totalLoans) : 0;
+            document.getElementById('avgLoanSize').textContent = Math.round(avgLoanSize).toLocaleString();
+            
+            document.getElementById('totalInterestRevenue').textContent = (metrics.totalInterest || 0).toLocaleString();
+            
+            // Calculate overall approval rate safely
+            const approvalRate = metrics.totalLoans > 0 ? 
+                ((metrics.approvedLoans || 0) / metrics.totalLoans * 100).toFixed(1) : 0;
+            document.getElementById('overallApprovalRate').textContent = approvalRate;
+            
+            document.getElementById('activeEmployees').textContent = data.teamPerformance?.length || 0;
+        }
+
+        // Export functions
+        function generatePDFReport() {
+            alert('PDF report would be generated here. This feature requires additional libraries.');
+        }
+
+        function exportToExcel() {
+            alert('Excel export would be generated here. This feature requires additional libraries.');
+        }
+
+        // Load reports on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeCharts();
+            loadReports();
+        });
+    </script>
+</body>
+</html>

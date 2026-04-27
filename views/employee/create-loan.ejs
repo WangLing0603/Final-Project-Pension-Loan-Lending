@@ -1,0 +1,1168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Loan for <%= customer.first_name %> <%= customer.last_name %></title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        .customer-banner {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        .loan-type-card {
+            border: 2px solid #007bff;
+            border-radius: 10px;
+            background-color: #f8f9fa;
+            height: 100%;
+        }
+        .calculator-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 10px;
+            padding: 20px;
+        }
+        .requirement-badge {
+            font-size: 0.75rem;
+        }
+        .loan-feature {
+            font-size: 0.85rem;
+        }
+        .step-indicator {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            position: relative;
+        }
+        .step-indicator::before {
+            content: '';
+            position: absolute;
+            top: 15px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: #e9ecef;
+            z-index: 1;
+        }
+        .step {
+            text-align: center;
+            position: relative;
+            z-index: 2;
+        }
+        .step-number {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: #e9ecef;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 5px;
+            font-weight: bold;
+        }
+        .step.active .step-number {
+            background: #007bff;
+            color: white;
+        }
+        .step.completed .step-number {
+            background: #28a745;
+            color: white;
+        }
+        .employee-assist-badge {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+        }
+        .id-checkbox-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .withdrawal-locations {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 10px;
+        }
+        .location-item {
+            padding: 8px;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .location-item:last-child {
+            border-bottom: none;
+        }
+        .contract-section {
+            border: 2px dashed #007bff;
+            border-radius: 10px;
+            padding: 20px;
+            background: #f8f9fa;
+        }
+        .form-control:invalid {
+            border-color: #dc3545;
+        }
+        .form-control:valid {
+            border-color: #198754;
+        }
+        .required-field::after {
+            content: " *";
+            color: #dc3545;
+        }
+        .validation-message {
+            font-size: 0.875em;
+            margin-top: 0.25rem;
+        }
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            .contract-print, .contract-print * {
+                visibility: visible;
+            }
+            .contract-print {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                background: white;
+                padding: 20px;
+            }
+            .no-print {
+                display: none !important;
+            }
+            .contract-print .card {
+                border: none !important;
+                box-shadow: none !important;
+            }
+            .contract-print .table {
+                border: 1px solid #000;
+            }
+            .contract-print .table td,
+            .contract-print .table th {
+                border: 1px solid #000;
+                padding: 8px;
+            }
+        }
+        .signature-area {
+            border-top: 2px solid #000;
+            padding-top: 80px;
+            margin-top: 40px;
+            text-align: center;
+        }
+        .contract-header {
+            border-bottom: 3px double #000;
+            padding-bottom: 20px;
+            margin-bottom: 20px;
+        }
+        .terms-list {
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+        .payment-summary {
+            background-color: #f8f9fa;
+            border-left: 4px solid #007bff;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        .payment-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px dashed #dee2e6;
+        }
+        .payment-item:last-child {
+            border-bottom: none;
+        }
+        .payment-total {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #007bff;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/dashboard">
+                <i class="bi bi-cash-coin me-2"></i>Pension Loan System
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="/dashboard">Dashboard</a>
+                <a class="nav-link" href="/loans">Loan Applications</a>
+                <a class="nav-link" href="/employee/register-customer">Register Customer</a>
+                <a class="nav-link" href="/profile">Profile</a>
+                <a class="nav-link" href="/logout">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container my-4">
+        <!-- Back Button -->
+        <div class="mb-4">
+            <a href="/employee/customer/<%= customer.customer_id %>" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-2"></i>Back to Customer Profile
+            </a>
+        </div>
+
+        <!-- Customer Banner -->
+        <div class="customer-banner">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h4><i class="bi bi-person-check me-2"></i>Creating Loan for <%= customer.first_name %> <%= customer.last_name %></h4>
+                    <p class="mb-0">
+                        Pension Number: <%= customer.pension_number %> | 
+                        Monthly Pension: ₱<%= (customer.monthly_pension || 0).toLocaleString() %> |
+                        Pension System: <%= customer.pension_system || 'N/A' %>
+                    </p>
+                </div>
+                <div class="text-end">
+                    <span class="badge employee-assist-badge fs-6">
+                        <i class="bi bi-shield-check me-1"></i>Employee Assisted Application
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <% if (typeof error !== 'undefined') { %>
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i><%= error %>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        <% } %>
+
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0"><i class="bi bi-file-earmark-plus me-2"></i> Create Loan Application - Employee Assisted</h4>
+            </div>
+            <div class="card-body">
+                <!-- Step Indicator -->
+                <div class="step-indicator">
+                    <div class="step active">
+                        <div class="step-number">1</div>
+                        <small>Loan Information</small>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">2</div>
+                        <small>Loan Details</small>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">3</div>
+                        <small>ID & Documents</small>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">4</div>
+                        <small>Review & Contract</small>
+                    </div>
+                </div>
+
+                <form method="POST" action="/employee/create-loan" id="loanForm">
+                    <input type="hidden" name="customer_id" value="<%= customer.customer_id %>">
+                    <input type="hidden" name="valid_ids" id="valid_ids_input">
+                    <input type="hidden" name="loan_type" value="regular">
+                    
+                    <!-- Step 1: Loan Information -->
+                    <div id="step1">
+                        <h5 class="mb-4">Loan Information</h5>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="loan-type-card p-4">
+                                    <div class="text-center mb-3">
+                                        <i class="bi bi-cash-coin display-3 text-primary"></i>
+                                    </div>
+                                    <h5 class="text-center mb-3">Regular Pension Loan</h5>
+                                    
+                                    <!-- Loan Amount -->
+                                    <div class="mb-4">
+                                        <label for="loan_amount" class="form-label fw-bold required-field">Loan Amount (₱)</label>
+                                        <input type="number" class="form-control form-control-lg" id="loan_amount" name="loan_amount" 
+                                               min="1000" max="<%= customer.monthly_pension * 12 || 0 %>" step="1000" required
+                                               placeholder="Enter desired loan amount">
+                                        <div class="form-text">
+                                            Maximum allowed: ₱<%= (customer.monthly_pension * 12 || 0).toLocaleString() %>
+                                            (based on 12 months of customer's pension)
+                                        </div>
+                                    </div>
+
+                                    <!-- Repayment Period - From 1 to 24 months -->
+                                    <div class="mb-4">
+                                        <label for="duration_months" class="form-label fw-bold required-field">Repayment Period</label>
+                                        <select class="form-select form-select-lg" id="duration_months" name="duration_months" required>
+                                            <option value="">Select repayment period</option>
+                                            <option value="1">1 Month</option>
+                                            <option value="2">2 Months</option>
+                                            <option value="3">3 Months</option>
+                                            <option value="4">4 Months</option>
+                                            <option value="5">5 Months</option>
+                                            <option value="6">6 Months</option>
+                                            <option value="7">7 Months</option>
+                                            <option value="8">8 Months</option>
+                                            <option value="9">9 Months</option>
+                                            <option value="10">10 Months</option>
+                                            <option value="11">11 Months</option>
+                                            <option value="12" selected>12 Months (1 Year)</option>
+                                            <option value="13">13 Months</option>
+                                            <option value="14">14 Months</option>
+                                            <option value="15">15 Months</option>
+                                            <option value="16">16 Months</option>
+                                            <option value="17">17 Months</option>
+                                            <option value="18">18 Months (1.5 Years)</option>
+                                            <option value="19">19 Months</option>
+                                            <option value="20">20 Months</option>
+                                            <option value="21">21 Months</option>
+                                            <option value="22">22 Months</option>
+                                            <option value="23">23 Months</option>
+                                            <option value="24">24 Months (2 Years)</option>
+                                        </select>
+                                        <div class="form-text">Choose repayment period from 1 to 24 months</div>
+                                    </div>
+
+                                    <!-- Disbursement Method - Cash Only & Check -->
+                                    <div class="mb-4">
+                                        <label class="form-label fw-bold required-field">Disbursement Method</label>
+                                        <select class="form-select form-select-lg" id="disbursement_method" name="disbursement_method" required>
+                                            <option value="">Select disbursement method</option>
+                                            <option value="cash">Cash Only</option>
+                                            <option value="check">Check</option>
+                                        </select>
+                                        <div class="form-text">Cash only or Check disbursement available</div>
+                                    </div>
+
+                                    <!-- Purpose Category -->
+                                    <div class="mb-4">
+                                        <label class="form-label fw-bold required-field">Purpose Category</label>
+                                        <select class="form-select form-select-lg" id="purpose_category" name="purpose_category" required>
+                                            <option value="">Select category</option>
+                                            <option value="daily_expenses">Daily Expenses</option>
+                                            <option value="utility_bills">Utility Bills Payment</option>
+                                            <option value="family_needs">Family Needs</option>
+                                            <option value="medical">Medical Expenses</option>
+                                            <option value="education">Educational Support</option>
+                                            <option value="home_improvement">Home Improvement</option>
+                                            <option value="travel">Travel</option>
+                                            <option value="business">Small Business Capital</option>
+                                            <option value="other">Other Personal Use</option>
+                                        </select>
+                                    </div>
+
+                                    <!-- Detailed Purpose -->
+                                    <div class="mb-4">
+                                        <label for="purpose" class="form-label fw-bold required-field">Detailed Purpose Description</label>
+                                        <textarea class="form-control" id="purpose" name="purpose" rows="3" 
+                                                  placeholder="Please provide specific details about how the customer plans to use the loan funds..." 
+                                                  required></textarea>
+                                    </div>
+
+                                    <!-- Loan Calculator -->
+                                    <div class="calculator-section mt-4">
+                                        <h6><i class="bi bi-calculator"></i> Loan Calculator</h6>
+                                        <div class="row align-items-center">
+                                            <div class="col-md-4">
+                                                <label class="form-label text-white">Loan Amount: ₱<span id="amountDisplay">0</span></label>
+                                                <input type="range" class="form-range" id="amount_slider" min="1000" max="<%= customer.monthly_pension * 12 || 0 %>" step="1000" value="50000">
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="form-label text-white">Term: <span id="termDisplay">12</span> months</label>
+                                                <input type="range" class="form-range" id="term_slider" min="1" max="24" step="1" value="12">
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="calculation-result text-center">
+                                                    <small>Monthly Payment:</small>
+                                                    <div class="h5 mb-1" id="monthly_payment">₱0</div>
+                                                    <small>Total Interest:</small>
+                                                    <div id="total_interest">₱0</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="alert alert-primary mt-4">
+                                        <h6><i class="bi bi-clipboard-check"></i> Requirements:</h6>
+                                        <ul class="mb-0">
+                                            <li>ATM Passbook</li>
+                                            <li>Valid Government-issued ID</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="validation-message text-danger" id="step1Validation" style="display: none;">
+                            <i class="bi bi-exclamation-circle"></i> Please complete all required fields
+                        </div>
+
+                        <div class="mt-4 text-end">
+                            <button type="button" class="btn btn-primary btn-lg" onclick="validateStep1()">
+                                Next <i class="bi bi-arrow-right"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Step 2: Loan Details (Payment Summary) -->
+                    <div id="step2" style="display: none;">
+                        <h5 class="mb-4">Payment Details - Total Loan</h5>
+                        
+                        <!-- Payment Summary Card -->
+                        <div class="payment-summary">
+                            <h6 class="text-primary mb-3">LOAN PAYMENT SUMMARY</h6>
+                            
+                            <div class="payment-item">
+                                <span>Principal Amount:</span>
+                                <strong id="summary_principal">₱0.00</strong>
+                            </div>
+                            
+                            <div class="payment-item">
+                                <span>Interest Rate (per annum):</span>
+                                <strong>8%</strong>
+                            </div>
+                            
+                            <div class="payment-item">
+                                <span>Total Interest:</span>
+                                <strong id="summary_interest">₱0.00</strong>
+                            </div>
+                            
+                            <div class="payment-item">
+                                <span>Repayment Period:</span>
+                                <strong id="summary_term">0 months</strong>
+                            </div>
+                            
+                            <div class="payment-item">
+                                <span>Monthly Payment:</span>
+                                <strong id="summary_monthly">₱0.00</strong>
+                            </div>
+                            
+                            <div class="payment-item payment-total">
+                                <span>TOTAL LOAN PAYABLE:</span>
+                                <strong id="summary_total">₱0.00</strong>
+                            </div>
+                        </div>
+
+                        <!-- Amortization Schedule Preview -->
+                        <div class="card mt-4">
+                            <div class="card-header bg-light">
+                                <h6 class="mb-0">Amortization Schedule (First 3 Months)</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-sm table-bordered">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Month</th>
+                                                <th>Principal</th>
+                                                <th>Interest</th>
+                                                <th>Monthly Payment</th>
+                                                <th>Remaining Balance</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="amortization_preview">
+                                            <!-- Will be populated by JavaScript -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div class="text-muted small mt-2">
+                                    <i class="bi bi-info-circle"></i> Full amortization schedule will be generated upon loan approval
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-4 d-flex justify-content-between">
+                            <button type="button" class="btn btn-secondary btn-lg" onclick="prevStep()">
+                                <i class="bi bi-arrow-left"></i> Back
+                            </button>
+                            <button type="button" class="btn btn-primary btn-lg" onclick="validateStep2()">
+                                Next <i class="bi bi-arrow-right"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Step 3: ID & Documents -->
+                    <div id="step3" style="display: none;">
+                        <h5 class="mb-4">ID Verification & ATM Passbook</h5>
+                        
+                        <!-- ATM Passbook -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold required-field">ATM Passbook</label>
+                            <div class="border p-3 rounded">
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" id="atm_passbook_present" required>
+                                    <label class="form-check-label" for="atm_passbook_present">
+                                        ATM Passbook is presented and verified
+                                    </label>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="atm_passbook_number" class="form-label">ATM Passbook PIN Number</label>
+                                    <input type="text" class="form-control" id="atm_passbook_number" name="atm_passbook_number" 
+                                           placeholder="Enter ATM passbook number">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="bank_name" class="form-label">Bank Name</label>
+                                    <select class="form-select" id="bank_name" name="bank_name">
+                                        <option value="">Select bank</option>
+                                        <option value="bpi">BPI</option>
+                                        <option value="bdo">BDO</option>
+                                        <option value="metrobank">Metrobank</option>
+                                        <option value="landbank">Landbank</option>
+                                        <option value="pnb">PNB</option>
+                                        <option value="security_bank">Security Bank</option>
+                                        <option value="unionbank">Unionbank</option>
+                                        <option value="other">Other</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Valid ID Verification -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold required-field">Valid ID Presented (Check all that apply)</label>
+                            <div class="id-checkbox-group">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="valid_ids_checkbox" value="umid" id="umid">
+                                    <label class="form-check-label" for="umid">UMID (Unified Multi-Purpose ID)</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="valid_ids_checkbox" value="sss_id" id="sss_id">
+                                    <label class="form-check-label" for="sss_id">SSS ID</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="valid_ids_checkbox" value="gsis_id" id="gsis_id">
+                                    <label class="form-check-label" for="gsis_id">GSIS ID</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="valid_ids_checkbox" value="philhealth_id" id="philhealth_id">
+                                    <label class="form-check-label" for="philhealth_id">PhilHealth ID</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="valid_ids_checkbox" value="passport" id="passport">
+                                    <label class="form-check-label" for="passport">Philippine Passport</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="valid_ids_checkbox" value="driver_license" id="driver_license">
+                                    <label class="form-check-label" for="driver_license">Driver's License</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="valid_ids_checkbox" value="voter_id" id="voter_id">
+                                    <label class="form-check-label" for="voter_id">Voter's ID</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="valid_ids_checkbox" value="postal_id" id="postal_id">
+                                    <label class="form-check-label" for="postal_id">Postal ID</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="valid_ids_checkbox" value="senior_citizen_id" id="senior_citizen_id">
+                                    <label class="form-check-label" for="senior_citizen_id">Senior Citizen ID</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="valid_ids_checkbox" value="pwd_id" id="pwd_id">
+                                    <label class="form-check-label" for="pwd_id">PWD ID</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="valid_ids_checkbox" value="prc_id" id="prc_id">
+                                    <label class="form-check-label" for="prc_id">PRC ID</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="valid_ids_checkbox" value="tin_id" id="tin_id">
+                                    <label class="form-check-label" for="tin_id">TIN ID</label>
+                                </div>
+                            </div>
+                            <div class="form-text">At least one valid government-issued ID is required</div>
+                        </div>
+
+                        <!-- ID Number -->
+                        <div class="mb-3">
+                            <label for="id_number" class="form-label fw-bold">Primary ID Number</label>
+                            <input type="text" class="form-control" id="id_number" name="id_number" 
+                                   placeholder="Enter ID number from the selected ID">
+                        </div>
+
+                        <!-- Withdrawal Method - Cash Only (Hidden) -->
+                        <input type="hidden" name="withdrawal_method" value="cash_only">
+
+                        <div class="mt-4 d-flex justify-content-between">
+                            <button type="button" class="btn btn-secondary btn-lg" onclick="prevStep()">
+                                <i class="bi bi-arrow-left"></i> Back
+                            </button>
+                            <button type="button" class="btn btn-primary btn-lg" onclick="validateStep3()">
+                                Next <i class="bi bi-arrow-right"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Step 4: Review & Contract -->
+                    <div id="step4" style="display: none;">
+                        <h5 class="mb-4">Review Loan Application & Contract</h5>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="card mb-3">
+                                    <div class="card-header bg-light">
+                                        <h6 class="mb-0">Loan Summary</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <table class="table table-sm">
+                                            <tr>
+                                                <td><strong>Customer:</strong></td>
+                                                <td><%= customer.first_name %> <%= customer.last_name %></td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>Pension No:</strong></td>
+                                                <td><%= customer.pension_number %></td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>Loan Type:</strong></td>
+                                                <td>Regular Pension Loan</td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>Amount:</strong></td>
+                                                <td id="review_amount"></td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>Term:</strong></td>
+                                                <td id="review_term"></td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>Purpose:</strong></td>
+                                                <td id="review_purpose"></td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>Monthly Payment:</strong></td>
+                                                <td id="review_monthly"></td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>Total Interest:</strong></td>
+                                                <td id="review_interest"></td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>Total Loan Payable:</strong></td>
+                                                <td id="review_total"></td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>Disbursement Method:</strong></td>
+                                                <td id="review_disbursement"></td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-header bg-light">
+                                        <h6 class="mb-0">Verified Documents</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div id="verifiedDocuments">
+                                            <div class="form-check mb-2">
+                                                <input class="form-check-input" type="checkbox" checked disabled>
+                                                <label class="form-check-label small">ATM Passbook</label>
+                                            </div>
+                                            <div class="form-check mb-2" id="verified_ids_container">
+                                                <!-- Verified IDs will be listed here -->
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Printable Contract -->
+                        <div class="contract-section mt-4">
+                            <div class="d-flex justify-content-between align-items-center mb-3 no-print">
+                                <h5><i class="bi bi-file-earmark-text"></i> Loan Agreement Contract</h5>
+                                <button type="button" class="btn btn-outline-primary" onclick="printContract()">
+                                    <i class="bi bi-printer"></i> Print Contract
+                                </button>
+                            </div>
+                            
+                            <div class="contract-print">
+                                <div class="contract-header text-center">
+                                    <h2>MILLENIUM CASH</h2>
+                                    <h4>LOAN AGREEMENT</h4>
+                                    <p>Contract No: <span id="contract_number"></span></p>
+                                </div>
+                                
+                                <p>KNOW ALL MEN BY THESE PRESENTS:</p>
+                                
+                                <p>This Loan Agreement is made and entered into by and between:</p>
+                                
+                                <p><strong>MILLENIUM CASH</strong>, a lending company duly organized and existing under the laws of the Philippines, with office address at Iloilo City, hereinafter referred to as the <strong>"LENDER"</strong>;</p>
+                                
+                                <p>- AND -</p>
+                                
+                                <p><strong><%= customer.first_name %> <%= customer.last_name %></strong>, of legal age, Filipino citizen, with pension number <strong><%= customer.pension_number %></strong>, and residing at <strong><%= customer.street_address || '' %>, <%= customer.barangay || '' %>, <%= customer.city || '' %></strong>, hereinafter referred to as the <strong>"BORROWER"</strong>.</p>
+                                
+                                <p><strong>WITNESSETH</strong></p>
+                                
+                                <p>WHEREAS, the BORROWER has applied for a loan from the LENDER, which the LENDER has agreed to grant, subject to the terms and conditions hereinafter set forth;</p>
+                                
+                                <p><strong>NOW, THEREFORE, for and in consideration of the foregoing premises and the mutual covenants hereinafter set forth, the parties hereby agree as follows:</strong></p>
+                                
+                                <h5 class="mt-4">ARTICLE I: LOAN AMOUNT AND TERMS</h5>
+                                
+                                <table class="table table-bordered">
+                                    <tr>
+                                        <td>Loan Amount:</td>
+                                        <td><strong id="contract_amount">₱0.00</strong></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Loan Type:</td>
+                                        <td><strong>Regular Pension Loan</strong></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Interest Rate:</td>
+                                        <td><strong>8% per annum</strong></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Term:</td>
+                                        <td><strong id="contract_term">0 months</strong></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Monthly Payment:</td>
+                                        <td><strong id="contract_monthly">₱0.00</strong></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Total Interest:</td>
+                                        <td><strong id="contract_total_interest">₱0.00</strong></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Total Loan Payable:</td>
+                                        <td><strong id="contract_total">₱0.00</strong></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Disbursement Method:</td>
+                                        <td><strong id="contract_disbursement"></strong></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Date of Contract:</td>
+                                        <td><span id="contract_date"></span></td>
+                                    </tr>
+                                </table>
+                                
+                                <h5 class="mt-4">ARTICLE II: MODE OF PAYMENT</h5>
+                                <p>The BORROWER agrees to pay the loan in equal monthly installments as indicated above, starting on the first month after loan disbursement. Payments shall be made through automatic pension deduction or any other mode as agreed upon by both parties.</p>
+                                
+                                <h5 class="mt-4">ARTICLE III: DEFAULT AND PENALTIES</h5>
+                                <p>In case of default in the payment of any installment when due, the BORROWER shall pay a penalty of 2% per month on the overdue amount, which shall be compounded monthly until fully paid. The LENDER shall have the right to demand immediate payment of the entire unpaid balance in case of default for more than 90 days.</p>
+                                
+                                <h5 class="mt-4">ARTICLE IV: PREPAYMENT</h5>
+                                <p>The BORROWER shall have the right to prepay the loan in full or in part at any time without penalty. Any prepayment shall be applied first to outstanding interest and penalties, if any, and then to the principal balance.</p>
+                                
+                                <h5 class="mt-4">ARTICLE V: GOVERNING LAW</h5>
+                                <p>This Agreement shall be governed by and construed in accordance with the laws of the Republic of the Philippines.</p>
+                                
+                                <p class="mt-4"><strong>IN WITNESS WHEREOF</strong>, the parties have hereunto set their hands on the date and place first above written.</p>
+                                
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="signature-area">
+                                            <p><strong><%= customer.first_name %> <%= customer.last_name %></strong><br>BORROWER</p>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="signature-area">
+                                            <p><strong>MILLENIUM CASH</strong><br>By: <%= user.full_name %><br>Authorized Representative</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="row mt-4">
+                                    <div class="col-md-12">
+                                        <div class="signature-area">
+                                            <p><strong>WITNESSES:</strong></p>
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <p>_________________________<br>Witness 1</p>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <p>_________________________<br>Witness 2</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="row mt-4">
+                                    <div class="col-md-12 text-center">
+                                        <p><small>ACKNOWLEDGMENT</small></p>
+                                        <p><small>REPUBLIC OF THE PHILIPPINES ) S.S.</small></p>
+                                        <p><small>BEFORE ME, a Notary Public for and in the above jurisdiction, personally appeared the above-named parties, known to me to be the same persons who executed the foregoing instrument and acknowledged to me that the same is their free and voluntary act and deed.</small></p>
+                                        <p><small>WITNESS MY HAND AND SEAL on the date and place first above written.</small></p>
+                                        <div class="signature-area">
+                                            <p><small>NOTARY PUBLIC</small></p>
+                                            <p><small>Doc. No. _____;<br>Page No. _____;<br>Book No. _____;<br>Series of 2025.</small></p>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="row mt-4">
+                                    <div class="col-md-12 text-center">
+                                        <p><small>This document was electronically generated and verified.</small></p>
+                                        <p><small>Document ID: <span id="contract_id_display"></span></small></p>
+                                        <p><small>Generated on: <span id="contract_timestamp"></span></small></p>
+                                        <p><small>Verification Code: <span id="contract_hash"></span></small></p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Employee Notes -->
+                        <div class="mb-3 mt-4 no-print">
+                            <label for="notes" class="form-label fw-bold">Employee Notes (Optional)</label>
+                            <textarea class="form-control" id="notes" name="notes" rows="2" 
+                                      placeholder="Add any additional notes or observations about this loan application..."></textarea>
+                        </div>
+
+                        <!-- Terms and Conditions -->
+                        <div class="mb-4 no-print">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="terms_agreement" required>
+                                <label class="form-check-label" for="terms_agreement">
+                                    I certify that all information provided is true and correct. The customer has been informed about the loan terms and has received a copy of the contract.
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="customer_consent" required>
+                                <label class="form-check-label" for="customer_consent">
+                                    The customer has consented to this loan application, verified their identity, and authorized automatic pension deductions.
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="id_verified" required>
+                                <label class="form-check-label" for="id_verified">
+                                    I have verified the customer's ATM passbook and valid government-issued ID.
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="alert alert-info no-print">
+                            <h6><i class="bi bi-info-circle"></i> Important Reminders</h6>
+                            <ul class="mb-0 small">
+                                <li>Application will be submitted for customer: <strong><%= customer.first_name %> <%= customer.last_name %></strong></li>
+                                <li>Customer will receive notification about this application</li>
+                                <li>Processing time: 2-5 business days</li>
+                                <li>Ensure ATM passbook and valid ID are verified</li>
+                                <li>Print and provide a copy of the contract to the customer</li>
+                            </ul>
+                        </div>
+
+                        <div class="d-flex justify-content-between no-print">
+                            <button type="button" class="btn btn-secondary btn-lg" onclick="prevStep()">
+                                <i class="bi bi-arrow-left"></i> Back
+                            </button>
+                            <button type="submit" class="btn btn-success btn-lg">
+                                <i class="bi bi-send-check"></i> Create Loan Application
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Loan configuration
+        const loanType = {
+            name: "Regular Pension Loan",
+            maxMultiplier: 12,
+            minTerm: 1,
+            maxTerm: 24,
+            interestRate: 8
+        };
+
+        let currentStep = 1;
+        const monthlyPension = <%= customer.monthly_pension || 0 %>;
+        const maxLoanAmount = monthlyPension * 12;
+
+        // Validation functions
+        function validateStep1() {
+            let isValid = true;
+            
+            const loanAmount = document.getElementById('loan_amount').value;
+            if (!loanAmount || loanAmount < 1000 || loanAmount > maxLoanAmount) {
+                document.getElementById('step1Validation').style.display = 'block';
+                document.getElementById('step1Validation').textContent = 'Please enter a valid loan amount';
+                isValid = false;
+            } else {
+                document.getElementById('step1Validation').style.display = 'none';
+            }
+            
+            if (isValid) {
+                updatePaymentSummary();
+                nextStep();
+            }
+        }
+
+        function validateStep2() {
+            // Step 2 is just review, always valid
+            nextStep();
+        }
+
+        function validateStep3() {
+            let isValid = true;
+            
+            // Validate ATM passbook
+            if (!document.getElementById('atm_passbook_present').checked) {
+                alert('Please confirm that ATM passbook is presented');
+                isValid = false;
+            }
+            
+            // Validate ID selection
+            const checkedIds = Array.from(document.querySelectorAll('input[name="valid_ids_checkbox"]:checked'));
+            if (checkedIds.length === 0) {
+                alert('Please select at least one valid ID');
+                isValid = false;
+            }
+            
+            if (isValid) {
+                // Store IDs in hidden field
+                document.getElementById('valid_ids_input').value = checkedIds.map(input => input.value).join(',');
+                updateReviewSection();
+                nextStep();
+            }
+        }
+
+        function updatePaymentSummary() {
+            const amount = parseFloat(document.getElementById('loan_amount').value) || 0;
+            const term = parseInt(document.getElementById('duration_months').value) || 12;
+            
+            const monthlyRate = loanType.interestRate / 100 / 12;
+            const monthlyPayment = amount * monthlyRate * Math.pow(1 + monthlyRate, term) / 
+                                 (Math.pow(1 + monthlyRate, term) - 1);
+            const totalInterest = (monthlyPayment * term) - amount;
+            const totalPayable = amount + totalInterest;
+            
+            // Update payment summary
+            document.getElementById('summary_principal').textContent = '₱' + amount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            document.getElementById('summary_interest').textContent = '₱' + totalInterest.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            document.getElementById('summary_term').textContent = term + ' months';
+            document.getElementById('summary_monthly').textContent = '₱' + monthlyPayment.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            document.getElementById('summary_total').textContent = '₱' + totalPayable.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            
+            // Update amortization preview
+            updateAmortizationPreview(amount, term, monthlyPayment, monthlyRate);
+        }
+
+        function updateAmortizationPreview(amount, term, monthlyPayment, monthlyRate) {
+            let balance = amount;
+            let preview = document.getElementById('amortization_preview');
+            preview.innerHTML = '';
+            
+            for (let i = 1; i <= Math.min(3, term); i++) {
+                const interest = balance * monthlyRate;
+                const principal = monthlyPayment - interest;
+                balance -= principal;
+                
+                preview.innerHTML += `
+                    <tr>
+                        <td>${i}</td>
+                        <td>₱${principal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                        <td>₱${interest.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                        <td>₱${monthlyPayment.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                        <td>₱${Math.max(0, balance).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                    </tr>
+                `;
+            }
+        }
+
+        function updateCalculator() {
+            const amount = parseInt(document.getElementById('amount_slider').value) || 0;
+            const term = parseInt(document.getElementById('term_slider').value) || 12;
+            
+            document.getElementById('loan_amount').value = amount;
+            document.getElementById('duration_months').value = term;
+            
+            const monthlyRate = loanType.interestRate / 100 / 12;
+            const monthlyPayment = amount * monthlyRate * Math.pow(1 + monthlyRate, term) / 
+                                 (Math.pow(1 + monthlyRate, term) - 1);
+            const totalInterest = (monthlyPayment * term) - amount;
+            
+            document.getElementById('amountDisplay').textContent = amount.toLocaleString();
+            document.getElementById('termDisplay').textContent = term;
+            document.getElementById('monthly_payment').textContent = '₱' + Math.round(monthlyPayment).toLocaleString();
+            document.getElementById('total_interest').textContent = '₱' + Math.round(totalInterest).toLocaleString();
+        }
+
+        function nextStep() {
+            if (currentStep === 1) {
+                document.getElementById('step1').style.display = 'none';
+                document.getElementById('step2').style.display = 'block';
+                updateStepIndicator(2);
+                currentStep = 2;
+            } else if (currentStep === 2) {
+                document.getElementById('step2').style.display = 'none';
+                document.getElementById('step3').style.display = 'block';
+                updateStepIndicator(3);
+                currentStep = 3;
+            } else if (currentStep === 3) {
+                document.getElementById('step3').style.display = 'none';
+                document.getElementById('step4').style.display = 'block';
+                updateStepIndicator(4);
+                currentStep = 4;
+            }
+        }
+
+        function prevStep() {
+            if (currentStep === 2) {
+                document.getElementById('step2').style.display = 'none';
+                document.getElementById('step1').style.display = 'block';
+                updateStepIndicator(1);
+                currentStep = 1;
+            } else if (currentStep === 3) {
+                document.getElementById('step3').style.display = 'none';
+                document.getElementById('step2').style.display = 'block';
+                updateStepIndicator(2);
+                currentStep = 2;
+            } else if (currentStep === 4) {
+                document.getElementById('step4').style.display = 'none';
+                document.getElementById('step3').style.display = 'block';
+                updateStepIndicator(3);
+                currentStep = 3;
+            }
+        }
+
+        function updateStepIndicator(step) {
+            document.querySelectorAll('.step').forEach((s, index) => {
+                s.classList.remove('active', 'completed');
+                if (index + 1 < step) {
+                    s.classList.add('completed');
+                } else if (index + 1 === step) {
+                    s.classList.add('active');
+                }
+            });
+        }
+
+        function updateReviewSection() {
+            const amount = parseFloat(document.getElementById('loan_amount').value) || 0;
+            const term = parseInt(document.getElementById('duration_months').value) || 12;
+            const purposeCategory = document.getElementById('purpose_category');
+            const purpose = purposeCategory.options[purposeCategory.selectedIndex]?.text || 'Not specified';
+            const disbursementMethod = document.getElementById('disbursement_method');
+            const disbursementText = disbursementMethod.options[disbursementMethod.selectedIndex]?.text || 'Not specified';
+            
+            // Calculate payment details
+            const monthlyRate = loanType.interestRate / 100 / 12;
+            const monthlyPayment = amount * monthlyRate * Math.pow(1 + monthlyRate, term) / 
+                                 (Math.pow(1 + monthlyRate, term) - 1);
+            const totalInterest = (monthlyPayment * term) - amount;
+            const totalPayable = amount + totalInterest;
+            
+            // Update review section
+            document.getElementById('review_amount').textContent = '₱' + amount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            document.getElementById('review_term').textContent = term + ' months';
+            document.getElementById('review_purpose').textContent = purpose;
+            document.getElementById('review_monthly').textContent = '₱' + monthlyPayment.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            document.getElementById('review_interest').textContent = '₱' + totalInterest.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            document.getElementById('review_total').textContent = '₱' + totalPayable.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            document.getElementById('review_disbursement').textContent = disbursementText;
+            
+            // Update verified IDs
+            const checkedIds = Array.from(document.querySelectorAll('input[name="valid_ids_checkbox"]:checked'));
+            const idsContainer = document.getElementById('verified_ids_container');
+            idsContainer.innerHTML = '';
+            checkedIds.forEach(id => {
+                const label = document.querySelector(`label[for="${id.id}"]`).textContent;
+                idsContainer.innerHTML += `
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" checked disabled>
+                        <label class="form-check-label small">${label}</label>
+                    </div>
+                `;
+            });
+            
+            // Update contract
+            updateContract(amount, term, monthlyPayment, totalPayable, totalInterest, disbursementText);
+        }
+
+        function updateContract(amount, term, monthlyPayment, totalPayable, totalInterest, disbursementMethod) {
+            const now = new Date();
+            const contractId = 'MC' + now.getFullYear() + (now.getMonth() + 1).toString().padStart(2, '0') + 
+                             now.getDate().toString().padStart(2, '0') + Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+            
+            document.getElementById('contract_date').textContent = now.toLocaleDateString('en-PH', { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            });
+            document.getElementById('contract_number').textContent = contractId;
+            document.getElementById('contract_id_display').textContent = contractId;
+            document.getElementById('contract_timestamp').textContent = now.toLocaleString('en-PH');
+            
+            const hash = btoa(contractId + now.getTime()).substring(0, 16);
+            document.getElementById('contract_hash').textContent = hash;
+            
+            document.getElementById('contract_amount').textContent = '₱' + amount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            document.getElementById('contract_term').textContent = term + ' months';
+            document.getElementById('contract_monthly').textContent = '₱' + monthlyPayment.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            document.getElementById('contract_total').textContent = '₱' + totalPayable.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            document.getElementById('contract_total_interest').textContent = '₱' + totalInterest.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            document.getElementById('contract_disbursement').textContent = disbursementMethod;
+        }
+
+        function printContract() {
+            window.print();
+        }
+
+        // Event Listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set max loan amount
+            document.getElementById('loan_amount').max = maxLoanAmount;
+            document.getElementById('amount_slider').max = maxLoanAmount;
+            
+            // Initialize calculator
+            updateCalculator();
+            
+            // Amount slider
+            document.getElementById('amount_slider').addEventListener('input', function() {
+                document.getElementById('loan_amount').value = this.value;
+                updateCalculator();
+            });
+            
+            // Term slider
+            document.getElementById('term_slider').addEventListener('input', function() {
+                document.getElementById('duration_months').value = this.value;
+                updateCalculator();
+            });
+            
+            // Manual amount input
+            document.getElementById('loan_amount').addEventListener('input', function() {
+                const max = parseInt(this.max);
+                const value = parseInt(this.value) || 0;
+                document.getElementById('amount_slider').value = Math.min(value, max);
+                updateCalculator();
+            });
+            
+            // Manual term selection
+            document.getElementById('duration_months').addEventListener('change', function() {
+                document.getElementById('term_slider').value = this.value;
+                updateCalculator();
+            });
+        });
+
+        // Form validation
+        document.getElementById('loanForm').addEventListener('submit', function(e) {
+            const amount = parseInt(document.getElementById('loan_amount').value);
+            
+            if (amount > maxLoanAmount) {
+                e.preventDefault();
+                alert('Loan amount cannot exceed customer\'s maximum eligible amount of ₱' + maxLoanAmount.toLocaleString());
+                return false;
+            }
+            
+            if (!document.getElementById('atm_passbook_present').checked) {
+                e.preventDefault();
+                alert('Please verify ATM passbook');
+                return false;
+            }
+            
+            if (!document.getElementById('terms_agreement').checked || 
+                !document.getElementById('customer_consent').checked ||
+                !document.getElementById('id_verified').checked) {
+                e.preventDefault();
+                alert('Please confirm all terms and verifications');
+                return false;
+            }
+        });
+    </script>
+</body>
+</html>

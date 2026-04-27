@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title || 'Pension Loan System' %></title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --success-color: #27ae60;
+            --warning-color: #f39c12;
+            --danger-color: #e74c3c;
+            --light-bg: #f8f9fa;
+            --sidebar-width: 250px;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f7fa;
+        }
+        
+        /* Sidebar Styles */
+        .sidebar {
+            background: var(--primary-color);
+            color: white;
+            height: 100vh;
+            position: fixed;
+            width: var(--sidebar-width);
+            transition: all 0.3s;
+            z-index: 1000;
+        }
+        
+        .sidebar .nav-link {
+            color: #bdc3c7;
+            padding: 12px 20px;
+            margin: 4px 0;
+            border-radius: 5px;
+            transition: all 0.3s;
+        }
+        
+        .sidebar .nav-link:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+        
+        .sidebar .nav-link.active {
+            background: var(--secondary-color);
+            color: white;
+        }
+        
+        .sidebar .nav-link i {
+            width: 20px;
+            margin-right: 10px;
+        }
+        
+        /* Main Content */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            padding: 20px;
+            transition: all 0.3s;
+        }
+        
+        .content-wrapper {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            padding: 25px;
+            margin-bottom: 20px;
+        }
+        
+        /* Top Navigation */
+        .top-navbar {
+            background: white;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 15px 0;
+            margin-bottom: 20px;
+        }
+        
+        /* Cards */
+        .dashboard-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.08);
+            border: none;
+            transition: transform 0.3s;
+            height: 100%;
+        }
+        
+        .dashboard-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .card-icon {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+        }
+        
+        /* Stats Cards Colors */
+        .card-primary { border-left: 4px solid var(--primary-color); }
+        .card-success { border-left: 4px solid var(--success-color); }
+        .card-warning { border-left: 4px solid var(--warning-color); }
+        .card-danger { border-left: 4px solid var(--danger-color); }
+        .card-info { border-left: 4px solid var(--secondary-color); }
+        
+        /* Buttons */
+        .btn-primary {
+            background: var(--primary-color);
+            border: none;
+            padding: 10px 20px;
+        }
+        
+        .btn-primary:hover {
+            background: #1a252f;
+        }
+        
+        .btn-success {
+            background: var(--success-color);
+            border: none;
+        }
+        
+        /* Tables */
+        .table th {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+        }
+        
+        .table td {
+            vertical-align: middle;
+        }
+        
+        /* Status Badges */
+        .badge-pending { background: var(--warning-color); }
+        .badge-approved { background: var(--success-color); }
+        .badge-rejected { background: var(--danger-color); }
+        .badge-disbursed { background: var(--secondary-color); }
+        
+        /* Alerts */
+        .alert {
+            border: none;
+            border-radius: 8px;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                margin-left: -var(--sidebar-width);
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+            
+            .sidebar.active {
+                margin-left: 0;
+            }
+        }
+        
+        /* Login Page Specific */
+        .login-container {
+            min-height: 100vh;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .login-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            width: 100%;
+            max-width: 400px;
+        }
+        
+        /* Home Page */
+        .hero-section {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            padding: 100px 0;
+            text-align: center;
+        }
+        
+        .feature-card {
+            text-align: center;
+            padding: 30px;
+            border-radius: 10px;
+            background: white;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            transition: transform 0.3s;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-5px);
+        }
+    </style>
+</head>
+<body>
+    <% if (user && !noSidebar) { %>
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="p-4">
+                <h4 class="text-center mb-4">
+                    <i class="fas fa-hand-holding-usd"></i>
+                    Pension Loan
+                </h4>
+                
+                <ul class="nav flex-column">
+                    <% if (user.user_type === 'admin') { %>
+                        <li class="nav-item">
+                            <a class="nav-link <%= currentPage === 'dashboard' ? 'active' : '' %>" href="/dashboard">
+                                <i class="fas fa-tachometer-alt"></i> Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link <%= currentPage === 'users' ? 'active' : '' %>" href="/admin/users">
+                                <i class="fas fa-users"></i> User Management
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link <%= currentPage === 'register' ? 'active' : '' %>" href="/admin/register">
+                                <i class="fas fa-user-plus"></i> Register Staff
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link <%= currentPage === 'loans' ? 'active' : '' %>" href="/loans">
+                                <i class="fas fa-file-invoice-dollar"></i> Loan Applications
+                            </a>
+                        </li>
+                    <% } else if (user.user_type === 'manager') { %>
+                        <li class="nav-item">
+                            <a class="nav-link <%= currentPage === 'dashboard' ? 'active' : '' %>" href="/dashboard">
+                                <i class="fas fa-tachometer-alt"></i> Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link <%= currentPage === 'loans' ? 'active' : '' %>" href="/loans">
+                                <i class="fas fa-file-invoice-dollar"></i> Loan Applications
+                            </a>
+                        </li>
+                    <% } else if (user.user_type === 'employee') { %>
+                        <li class="nav-item">
+                            <a class="nav-link <%= currentPage === 'dashboard' ? 'active' : '' %>" href="/dashboard">
+                                <i class="fas fa-tachometer-alt"></i> Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link <%= currentPage === 'register-customer' ? 'active' : '' %>" href="/employee/register-customer">
+                                <i class="fas fa-user-plus"></i> Register Customer
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link <%= currentPage === 'loans' ? 'active' : '' %>" href="/loans">
+                                <i class="fas fa-file-invoice-dollar"></i> Loan Applications
+                            </a>
+                        </li>
+                    <% } else if (user.user_type === 'customer') { %>
+                        <li class="nav-item">
+                            <a class="nav-link <%= currentPage === 'dashboard' ? 'active' : '' %>" href="/dashboard">
+                                <i class="fas fa-tachometer-alt"></i> Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link <%= currentPage === 'apply-loan' ? 'active' : '' %>" href="/apply-loan">
+                                <i class="fas fa-plus-circle"></i> Apply for Loan
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link <%= currentPage === 'loans' ? 'active' : '' %>" href="/loans">
+                                <i class="fas fa-file-invoice-dollar"></i> My Loans
+                            </a>
+                        </li>
+                    <% } %>
+                    
+                    <!-- Common Links -->
+                    <li class="nav-item">
+                        <a class="nav-link <%= currentPage === 'profile' ? 'active' : '' %>" href="/profile">
+                            <i class="fas fa-user"></i> My Profile
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-danger" href="/logout">
+                            <i class="fas fa-sign-out-alt"></i> Logout
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Top Navigation -->
+            <nav class="top-navbar">
+                <div class="container-fluid">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <h4 class="mb-0"><%= title || 'Dashboard' %></h4>
+                        </div>
+                        <div class="col-auto">
+                            <div class="d-flex align-items-center">
+                                <span class="me-3">
+                                    <i class="fas fa-user-circle me-2"></i>
+                                    <%= user.full_name %> (<%= user.user_type.toUpperCase() %>)
+                                </span>
+                                <div class="dropdown">
+                                    <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                        <i class="fas fa-cog"></i>
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li><a class="dropdown-item" href="/profile"><i class="fas fa-user me-2"></i>Profile</a></li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li><a class="dropdown-item text-danger" href="/logout"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+    <% } %>
+
+    <!-- Content Area -->
+    <div class="<%= user && !noSidebar ? 'container-fluid' : 'container' %>">
+        <!-- Flash Messages -->
+        <% if (typeof error !== 'undefined' && error) { %>
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <%= error %>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        <% } %>
+        
+        <% if (typeof success !== 'undefined' && success) { %>
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="fas fa-check-circle me-2"></i>
+                <%= success %>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        <% } %>
+
+        <!-- Main Content -->
+        <%- body %>
+    </div>
+
+    <!-- Bootstrap & jQuery -->
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Custom Scripts -->
+    <script>
+        // Auto-dismiss alerts after 5 seconds
+        $(document).ready(function() {
+            setTimeout(function() {
+                $('.alert').alert('close');
+            }, 5000);
+            
+            // Mobile sidebar toggle
+            $('.sidebar-toggle').click(function() {
+                $('.sidebar').toggleClass('active');
+            });
+        });
+        
+        // Format currency
+        function formatCurrency(amount) {
+            return '₱' + parseFloat(amount).toLocaleString('en-PH', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+        }
+        
+        // Format date
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-PH', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+        }
+    </script>
+</body>
+</html>

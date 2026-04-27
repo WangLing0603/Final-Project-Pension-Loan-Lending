@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %> - Millenium Cash</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        .page-header {
+            background: linear-gradient(135deg, #fd7e14 0%, #e55a00 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 25px;
+        }
+        .withdrawal-card {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-left: 4px solid #20c997;
+            border-radius: 10px;
+        }
+        .method-option {
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+        .method-option:hover {
+            border-color: #fd7e14;
+            background-color: #fff9f0;
+        }
+        .method-option.selected {
+            border-color: #fd7e14;
+            background-color: #ffe8cc;
+        }
+        .method-icon {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+            color: #fd7e14;
+        }
+        .btn-post {
+            background: linear-gradient(135deg, #fd7e14 0%, #e55a00 100%);
+            border: none;
+            padding: 12px 30px;
+            font-weight: 600;
+            border-radius: 10px;
+        }
+        .btn-post:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(253, 126, 20, 0.3);
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/dashboard">
+                <i class="bi bi-cash-coin me-2"></i>Millenium Cash
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="/dashboard">Dashboard</a>
+                <a class="nav-link" href="/employee/pension-withdrawals">Pension Withdrawals</a>
+                <a class="nav-link active" href="#">Create Posting</a>
+                <a class="nav-link" href="/employee/collection-postings">Collection Postings</a>
+                <a class="nav-link" href="/profile">Profile</a>
+                <a class="nav-link" href="/logout">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container my-4">
+        <!-- Page Header -->
+        <div class="page-header mb-4">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h1 class="mb-2"><i class="bi bi-journal-check me-2"></i>Create Collection Posting</h1>
+                    <p class="mb-0 opacity-75">Post withdrawal collection to bank or change fund</p>
+                </div>
+                <div class="col-md-4 text-end">
+                    <a href="/employee/pension-withdrawals" class="btn btn-light">
+                        <i class="bi bi-arrow-left me-2"></i>Back to Withdrawals
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Alerts -->
+        <% if (typeof error !== 'undefined' && error) { %>
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i><%= error %>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        <% } %>
+
+        <div class="row">
+            <div class="col-lg-8 mx-auto">
+                <!-- Withdrawal Information -->
+                <div class="card withdrawal-card mb-4">
+                    <div class="card-header bg-transparent">
+                        <h5 class="mb-0"><i class="bi bi-info-circle me-2"></i>Withdrawal Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <strong>Customer:</strong>
+                                <h5><%= withdrawal.first_name %> <%= withdrawal.last_name %></h5>
+                            </div>
+                            <div class="col-md-6">
+                                <strong>Pension Number:</strong>
+                                <h5><%= withdrawal.pension_number %></h5>
+                            </div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-md-6">
+                                <strong>Withdrawal Amount:</strong>
+                                <h4 class="text-success">₱<%= parseFloat(withdrawal.withdrawal_amount).toLocaleString() %></h4>
+                            </div>
+                            <div class="col-md-6">
+                                <strong>Withdrawal Date:</strong>
+                                <h5><%= new Date(withdrawal.withdrawal_date).toLocaleDateString() %></h5>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Collection Posting Form -->
+                <div class="card">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0"><i class="bi bi-cash-coin me-2"></i>Collection Details</h5>
+                    </div>
+                    <div class="card-body">
+                        <form method="POST" action="/employee/process-posting">
+                            <input type="hidden" name="withdrawal_id" value="<%= withdrawal.withdrawal_id %>">
+                            <input type="hidden" name="amount" value="<%= withdrawal.withdrawal_amount %>">
+                            
+                            <!-- Posting Type -->
+                            <div class="mb-4">
+                                <label class="form-label fw-bold">Posting Type <span class="text-danger">*</span></label>
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <div class="method-option" data-type="bank_deposit">
+                                            <div class="method-icon">
+                                                <i class="bi bi-bank"></i>
+                                            </div>
+                                            <h6 class="fw-bold">Bank Deposit</h6>
+                                            <p class="text-muted small mb-0">Deposit to bank account</p>
+                                            <input type="radio" class="d-none" name="posting_type" value="bank_deposit" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="method-option" data-type="change_fund">
+                                            <div class="method-icon">
+                                                <i class="bi bi-cash-stack"></i>
+                                            </div>
+                                            <h6 class="fw-bold">Change Fund</h6>
+                                            <p class="text-muted small mb-0">Add to change fund</p>
+                                            <input type="radio" class="d-none" name="posting_type" value="change_fund" required>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Bank Details (Conditional) -->
+                            <div class="mb-4" id="bankDetails" style="display: none;">
+                                <h6 class="fw-bold mb-3">Bank Information</h6>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <label for="bank_name" class="form-label">Bank Name</label>
+                                        <input type="text" class="form-control" id="bank_name" name="bank_name" placeholder="e.g., BDO, BPI, Metrobank">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="account_number" class="form-label">Account Number</label>
+                                        <input type="text" class="form-control" id="account_number" name="account_number" placeholder="Enter account number">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Reference Number -->
+                            <div class="mb-4">
+                                <label for="reference_number" class="form-label fw-bold">Reference Number</label>
+                                <input type="text" class="form-control" id="reference_number" name="reference_number" placeholder="Enter transaction reference number">
+                                <div class="form-text">Optional: Bank reference number or transaction ID</div>
+                            </div>
+
+                            <!-- Summary -->
+                            <div class="alert alert-info">
+                                <h6 class="alert-heading">Posting Summary</h6>
+                                <p class="mb-2">You are about to post a collection of <strong>₱<%= parseFloat(withdrawal.withdrawal_amount).toLocaleString() %></strong></p>
+                                <p class="mb-0" id="postingSummary">Select a posting type to see details</p>
+                            </div>
+
+                            <!-- Form Actions -->
+                            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                <a href="/employee/pension-withdrawals" class="btn btn-secondary me-md-2">
+                                    <i class="bi bi-x-circle me-2"></i>Cancel
+                                </a>
+                                <button type="submit" class="btn btn-post">
+                                    <i class="bi bi-check-circle me-2"></i>Post Collection
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Posting type selection
+        document.querySelectorAll('.method-option').forEach(function(option) {
+            option.addEventListener('click', function() {
+                // Remove selected class from all options
+                document.querySelectorAll('.method-option').forEach(function(opt) {
+                    opt.classList.remove('selected');
+                });
+                
+                // Add selected class to clicked option
+                this.classList.add('selected');
+                
+                // Check the radio button
+                const radio = this.querySelector('input[type="radio"]');
+                radio.checked = true;
+                
+                // Show/hide bank details
+                const type = this.getAttribute('data-type');
+                const bankDetails = document.getElementById('bankDetails');
+                const postingSummary = document.getElementById('postingSummary');
+                
+                if (type === 'bank_deposit') {
+                    bankDetails.style.display = 'block';
+                    postingSummary.textContent = 'Funds will be deposited to the specified bank account.';
+                } else {
+                    bankDetails.style.display = 'none';
+                    postingSummary.textContent = 'Funds will be added to the change fund for cash operations.';
+                }
+            });
+        });
+
+        // Form validation
+        document.querySelector('form').addEventListener('submit', function(e) {
+            const postingType = document.querySelector('input[name="posting_type"]:checked');
+            const bankName = document.getElementById('bank_name');
+            const accountNumber = document.getElementById('account_number');
+            
+            if (!postingType) {
+                e.preventDefault();
+                alert('Please select a posting type');
+                return;
+            }
+            
+            if (postingType.value === 'bank_deposit') {
+                if (!bankName.value.trim() || !accountNumber.value.trim()) {
+                    e.preventDefault();
+                    alert('Please fill in all bank details');
+                    return;
+                }
+            }
+            
+            // Show loading state
+            const submitBtn = this.querySelector('button[type="submit"]');
+            submitBtn.innerHTML = '<i class="bi bi-arrow-repeat spinner me-2"></i>Posting...';
+            submitBtn.disabled = true;
+        });
+    </script>
+</body>
+</html>
