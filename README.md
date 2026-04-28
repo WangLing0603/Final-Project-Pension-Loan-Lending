@@ -2,12 +2,14 @@
 
 A comprehensive web-based loan management system designed for pensioners, enabling streamlined loan applications, payment processing, and administrative oversight.
 
-👥 Team Members
-Role	Name	Responsibilities
-Lead Programmer	- Nick Anthony Francisco	
-UI/UX Designer	- Edward Allen Benjamin	
-Documentor -	Vivar Arano Jr	
-Documentor -	Noel Sucayan	
+# Team Members
+
+| Role | Name | Responsibilities |
+|------|------|------------------|
+| **Lead Programmer** | Nick Anthony Francisco | System architecture, backend development, database design, API integration, code review |
+| **UI/UX Designer** | Edward Allen Benjamin | User interface design, user experience optimization, frontend development, responsive design |
+| **Documentor** | Vivar Arano Jr | Technical documentation, user manuals, system guides, API documentation |
+| **Documentor** | Noel Sucayan | Requirements documentation, testing documentation, deployment guides, maintenance logs |
 
 - [Overview](#overview)
 - [Features](#features)
